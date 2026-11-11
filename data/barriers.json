@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "type": "broken_ramp",
+    "name": "Broken kerb ramp at the crossing to Mega Silk Way",
+    "lat": 51.088813,
+    "lon": 71.411393,
+    "radius_m": 6,
+    "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  },
+  {
+    "id": 2,
+    "type": "steps",
+    "name": "Steps without a ramp on the path by EXPO C1",
+    "lat": 51.091344,
+    "lon": 71.418368,
+    "radius_m": 6,
+    "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  }
+]

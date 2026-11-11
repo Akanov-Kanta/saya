@@ -1,0 +1,14 @@
+{
+  "2026-07-15T11:00Z@51.0909,71.4184": {
+    "feels_like": 31.0,
+    "source": "Open-Meteo archive: air 32.7 degC, feels like 31.0 degC"
+  },
+  "2026-07-15T13:00Z@51.0909,71.4184": {
+    "feels_like": 27.5,
+    "source": "Open-Meteo archive: air 31.0 degC, feels like 27.5 degC"
+  },
+  "2026-08-20T11:00Z@51.0909,71.4184": {
+    "feels_like": 17.6,
+    "source": "Open-Meteo archive: air 20.4 degC, feels like 17.6 degC"
+  }
+}
