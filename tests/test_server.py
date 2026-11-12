@@ -45,3 +45,19 @@ def test_point_outside_the_map_is_rejected():
     response = client.post("/api/route", json=body)
     assert response.status_code == 400
     assert "inside the mapped area" in response.json()["detail"]
+
+
+def test_buildings_carry_3d_shape_for_the_browser():
+    features = client.get("/api/buildings").json()["features"]
+    sphere = [f["properties"] for f in features if f["properties"]["shape"] == "sphere"]
+    assert len(sphere) == 1 and sphere[0]["height"] == 100       # the EXPO sphere, Nur Alem
+    assert 35 < sphere[0]["r"] < 45 and sphere[0]["zc"] == sphere[0]["height"] - sphere[0]["r"]
+    assert any(f["properties"]["min_height"] > 0 for f in features)   # parts that stand on columns
+    assert all(f["properties"]["height"] > f["properties"]["min_height"] for f in features)
+
+
+def test_trees_and_search_places():
+    trees = client.get("/api/trees").json()
+    assert trees["crown_radius_m"] == config.TREE_CROWN_RADIUS_M and len(trees["points"]) > 100
+    names = [p["name"] for p in client.get("/api/meta").json()["search"]]
+    assert names[:2] == ["Astana IT University", "Mega Silk Way"] and len(names) > 20

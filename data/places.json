@@ -1,0 +1,872 @@
+[
+{
+"name": "ЖК \"Айсанам\"",
+"lat": 51.113699,
+"lon": 71.431745,
+"type": "apartments"
+},
+{
+"name": "Павильон С1",
+"lat": 51.090791,
+"lon": 71.41853,
+"type": "yes"
+},
+{
+"name": "Павильон С2",
+"lat": 51.089008,
+"lon": 71.419548,
+"type": "yes"
+},
+{
+"name": "Павильон С3",
+"lat": 51.087549,
+"lon": 71.418051,
+"type": "yes"
+},
+{
+"name": "Павильон С4",
+"lat": 51.087882,
+"lon": 71.413446,
+"type": "yes"
+},
+{
+"name": "ЖК Променад Экспо Блок D",
+"lat": 51.095251,
+"lon": 71.425652,
+"type": "residential"
+},
+{
+"name": "Sairan Arena",
+"lat": 51.100578,
+"lon": 71.397603,
+"type": "sports_hall"
+},
+{
+"name": "ЖК Sport Towers",
+"lat": 51.104789,
+"lon": 71.397538,
+"type": "apartments"
+},
+{
+"name": "ЖК Crocus City",
+"lat": 51.098958,
+"lon": 71.409963,
+"type": "apartments"
+},
+{
+"name": "Алтын-Арна",
+"lat": 51.097639,
+"lon": 71.428691,
+"type": "apartments"
+},
+{
+"name": "Сарыарқа",
+"lat": 51.110028,
+"lon": 71.407331,
+"type": "sports_centre"
+},
+{
+"name": "Алау мұзайдыны сарайы",
+"lat": 51.105049,
+"lon": 71.405181,
+"type": "sports_centre"
+},
+{
+"name": "ЖК Акжайык",
+"lat": 51.11463,
+"lon": 71.431309,
+"type": "apartments"
+},
+{
+"name": "Тiлеп-Кобыз сарайы",
+"lat": 51.113748,
+"lon": 71.424837,
+"type": "commercial"
+},
+{
+"name": "ЖК \"Есиль\"",
+"lat": 51.099996,
+"lon": 71.432613,
+"type": "apartments"
+},
+{
+"name": "Здание УВД",
+"lat": 51.088213,
+"lon": 71.421331,
+"type": "yes"
+},
+{
+"name": "Жана-Жол 110/10 кВ",
+"lat": 51.095872,
+"lon": 71.417412,
+"type": "service"
+},
+{
+"name": "Nazarbayev University",
+"lat": 51.090435,
+"lon": 71.398368,
+"type": "university"
+},
+{
+"name": "Suzuki",
+"lat": 51.085899,
+"lon": 71.388471,
+"type": "yes"
+},
+{
+"name": "ЖК Времена года. Осень",
+"lat": 51.114278,
+"lon": 71.416517,
+"type": "apartments"
+},
+{
+"name": "ЖК Променад Экспо",
+"lat": 51.093087,
+"lon": 71.424782,
+"type": "residential"
+},
+{
+"name": "ЖК Арман кала-2",
+"lat": 51.097085,
+"lon": 71.425679,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Весна 1",
+"lat": 51.113814,
+"lon": 71.41217,
+"type": "apartments"
+},
+{
+"name": "Жақсылық Үшкемпіров атындағы жекпе-жек сарайы",
+"lat": 51.114414,
+"lon": 71.40941,
+"type": "sports_centre"
+},
+{
+"name": "Athletic Center",
+"lat": 51.087167,
+"lon": 71.394821,
+"type": "sports_centre"
+},
+{
+"name": "EXPO",
+"lat": 51.092799,
+"lon": 71.421465,
+"type": "yes"
+},
+{
+"name": "Alem.ai",
+"lat": 51.089233,
+"lon": 71.416235,
+"type": "office"
+},
+{
+"name": "Центр исследования энергии",
+"lat": 51.091398,
+"lon": 71.421453,
+"type": "yes"
+},
+{
+"name": "Мұз айдыны",
+"lat": 51.110307,
+"lon": 71.405655,
+"type": "ice_rink"
+},
+{
+"name": "ЖК \"Арман Кала-9\"",
+"lat": 51.100199,
+"lon": 71.422489,
+"type": "apartments"
+},
+{
+"name": "Qazaq Oil",
+"lat": 51.098331,
+"lon": 71.41308,
+"type": "yes"
+},
+{
+"name": "Астана балет",
+"lat": 51.099224,
+"lon": 71.41978,
+"type": "civic"
+},
+{
+"name": "ЖК EXPO Plaza C",
+"lat": 51.096509,
+"lon": 71.413973,
+"type": "apartments"
+},
+{
+"name": "ЖК EXPO Plaza B",
+"lat": 51.096884,
+"lon": 71.410421,
+"type": "apartments"
+},
+{
+"name": "ЖК EXPO Plaza A",
+"lat": 51.097146,
+"lon": 71.406743,
+"type": "apartments"
+},
+{
+"name": "Экспо Бульвар 4",
+"lat": 51.095244,
+"lon": 71.409777,
+"type": "yes"
+},
+{
+"name": "ЖК EXPO Residence квартал F",
+"lat": 51.090656,
+"lon": 71.404928,
+"type": "apartments"
+},
+{
+"name": "Mega Silk Way",
+"lat": 51.089086,
+"lon": 71.407286,
+"type": "yes"
+},
+{
+"name": "ЖК Времена года. Весна ә",
+"lat": 51.112653,
+"lon": 71.41192,
+"type": "apartments"
+},
+{
+"name": "ЖК Ұлы Дала",
+"lat": 51.095279,
+"lon": 71.433935,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Весна 4",
+"lat": 51.113187,
+"lon": 71.412797,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Весна 3",
+"lat": 51.114375,
+"lon": 71.412964,
+"type": "apartments"
+},
+{
+"name": "Holiday Inn Express Astana Turan",
+"lat": 51.113464,
+"lon": 71.40107,
+"type": "apartments"
+},
+{
+"name": "Allianz",
+"lat": 51.112371,
+"lon": 71.400495,
+"type": "commercial"
+},
+{
+"name": "Astana Partners",
+"lat": 51.108154,
+"lon": 71.432705,
+"type": "office"
+},
+{
+"name": "Есіл ауданының полиция басқармасы",
+"lat": 51.109871,
+"lon": 71.427932,
+"type": "public"
+},
+{
+"name": "ЖК “Real comfort”",
+"lat": 51.099809,
+"lon": 71.434115,
+"type": "apartments"
+},
+{
+"name": "ЖК Promenade Expo",
+"lat": 51.093692,
+"lon": 71.427057,
+"type": "apartments"
+},
+{
+"name": "Қалалық жедел медициналық жәрдем станциясы",
+"lat": 51.08238,
+"lon": 71.411524,
+"type": "yes"
+},
+{
+"name": "Мәңгілік Ел салтанат қақпасы",
+"lat": 51.104303,
+"lon": 71.430084,
+"type": "triumphal_arch"
+},
+{
+"name": "Wyndham Garden Astana",
+"lat": 51.082114,
+"lon": 71.407919,
+"type": "hotel"
+},
+{
+"name": "World Class",
+"lat": 51.108731,
+"lon": 71.423096,
+"type": "fitness_centre"
+},
+{
+"name": "ЖК Времена года. Лето 1 блок 2",
+"lat": 51.112096,
+"lon": 71.412863,
+"type": "apartments"
+},
+{
+"name": "Әкімшілік-зертханалық корпус",
+"lat": 51.109469,
+"lon": 71.42015,
+"type": "office"
+},
+{
+"name": "Тропикалық өсімдіктер жылыжайы",
+"lat": 51.106327,
+"lon": 71.419938,
+"type": "greenhouse"
+},
+{
+"name": "Шөл өсімдіктері жылыжайы",
+"lat": 51.105138,
+"lon": 71.419511,
+"type": "greenhouse"
+},
+{
+"name": "Барыс Арена",
+"lat": 51.109191,
+"lon": 71.394808,
+"type": "stadium"
+},
+{
+"name": "ORYNBOR TOWERS",
+"lat": 51.089816,
+"lon": 71.426368,
+"type": "apartments"
+},
+{
+"name": "Green Clinic",
+"lat": 51.082837,
+"lon": 71.407265,
+"type": "yes"
+},
+{
+"name": "QUEENS",
+"lat": 51.095981,
+"lon": 71.434771,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 1 блок 1",
+"lat": 51.111867,
+"lon": 71.412204,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 2 блок 1",
+"lat": 51.111672,
+"lon": 71.413301,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 2 блок 2",
+"lat": 51.111906,
+"lon": 71.413971,
+"type": "apartments"
+},
+{
+"name": "Блок Б",
+"lat": 51.086851,
+"lon": 71.429465,
+"type": "apartments"
+},
+{
+"name": "Блок А",
+"lat": 51.087785,
+"lon": 71.42817,
+"type": "apartments"
+},
+{
+"name": "Torre Astana by Wyndham",
+"lat": 51.10682,
+"lon": 71.424944,
+"type": "hotel"
+},
+{
+"name": "Demure",
+"lat": 51.106072,
+"lon": 71.429704,
+"type": "office"
+},
+{
+"name": "ЖК Времена года. Лето 5",
+"lat": 51.112091,
+"lon": 71.415804,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 4",
+"lat": 51.111387,
+"lon": 71.415486,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 3 блок 1",
+"lat": 51.11178,
+"lon": 71.415105,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года. Лето 3 блок 2",
+"lat": 51.111508,
+"lon": 71.414426,
+"type": "apartments"
+},
+{
+"name": "Жилой комплекс \"S Club\"",
+"lat": 51.101254,
+"lon": 71.428257,
+"type": "apartments"
+},
+{
+"name": "Жилой комплекс \"Park Avenue Exclusive\"",
+"lat": 51.101162,
+"lon": 71.422843,
+"type": "apartments"
+},
+{
+"name": "ЖК Barys City",
+"lat": 51.111078,
+"lon": 71.399679,
+"type": "apartments"
+},
+{
+"name": "ЖК \"Есиль Плаза\"",
+"lat": 51.102237,
+"lon": 71.405783,
+"type": "apartments"
+},
+{
+"name": "Дом на Ботаническом",
+"lat": 51.101057,
+"lon": 71.415433,
+"type": "apartments"
+},
+{
+"name": "ЖК Champion",
+"lat": 51.110392,
+"lon": 71.399649,
+"type": "apartments"
+},
+{
+"name": "Grand Champion",
+"lat": 51.110845,
+"lon": 71.401734,
+"type": "apartments"
+},
+{
+"name": "Sezim Qala. Senim 3 очередь, квартал",
+"lat": 51.11175,
+"lon": 71.393187,
+"type": "yes"
+},
+{
+"name": "Sezim Qala. Senim 2 очередь, квартал",
+"lat": 51.111511,
+"lon": 71.394743,
+"type": "yes"
+},
+{
+"name": "Sezim Qala. Senim 1 очередь, квартал",
+"lat": 51.111254,
+"lon": 71.396304,
+"type": "yes"
+},
+{
+"name": "ЖК Sport City",
+"lat": 51.114568,
+"lon": 71.402675,
+"type": "apartments"
+},
+{
+"name": "ЖК Времена года",
+"lat": 51.111719,
+"lon": 71.415752,
+"type": "apartments"
+},
+{
+"name": "Block 2",
+"lat": 51.089789,
+"lon": 71.399724,
+"type": "university"
+},
+{
+"name": "Block 4",
+"lat": 51.089914,
+"lon": 71.398824,
+"type": "university"
+},
+{
+"name": "Block 6",
+"lat": 51.090047,
+"lon": 71.397939,
+"type": "university"
+},
+{
+"name": "Block 8",
+"lat": 51.090176,
+"lon": 71.397037,
+"type": "university"
+},
+{
+"name": "Block 3",
+"lat": 51.090929,
+"lon": 71.400146,
+"type": "university"
+},
+{
+"name": "Block 5",
+"lat": 51.09103,
+"lon": 71.399229,
+"type": "university"
+},
+{
+"name": "Block 7",
+"lat": 51.091162,
+"lon": 71.398333,
+"type": "university"
+},
+{
+"name": "БЦ The Square-V",
+"lat": 51.112491,
+"lon": 71.401603,
+"type": "commercial"
+},
+{
+"name": "Arena city-1",
+"lat": 51.105323,
+"lon": 71.393197,
+"type": "apartments"
+},
+{
+"name": "Prime Green Clinic",
+"lat": 51.082775,
+"lon": 71.405224,
+"type": "yes"
+},
+{
+"name": "Athletic city блок D",
+"lat": 51.101352,
+"lon": 71.391875,
+"type": "yes"
+},
+{
+"name": "МФК Diamond",
+"lat": 51.08766,
+"lon": 71.422992,
+"type": "construction"
+},
+{
+"name": "Жилой Комплекс Parasat",
+"lat": 51.11352,
+"lon": 71.402254,
+"type": "apartments"
+},
+{
+"name": "BYD",
+"lat": 51.09731,
+"lon": 71.392731,
+"type": "yes"
+},
+{
+"name": "Turan Palace",
+"lat": 51.085058,
+"lon": 71.386221,
+"type": "apartments"
+},
+{
+"name": "Dastur 2",
+"lat": 51.099699,
+"lon": 71.389661,
+"type": "apartments"
+},
+{
+"name": "Dastur 3",
+"lat": 51.098945,
+"lon": 71.387965,
+"type": "apartments"
+},
+{
+"name": "Dastur 4",
+"lat": 51.098045,
+"lon": 71.387828,
+"type": "apartments"
+},
+{
+"name": "Dastur 5",
+"lat": 51.097238,
+"lon": 71.387569,
+"type": "apartments"
+},
+{
+"name": "Athletic city блок F",
+"lat": 51.101379,
+"lon": 71.39008,
+"type": "apartments"
+},
+{
+"name": "Athletic city блок H",
+"lat": 51.101577,
+"lon": 71.38887,
+"type": "apartments"
+},
+{
+"name": "Tank Astana",
+"lat": 51.100889,
+"lon": 71.393648,
+"type": "yes"
+},
+{
+"name": "Garden View-1",
+"lat": 51.101813,
+"lon": 71.408482,
+"type": "apartments"
+},
+{
+"name": "Life Park,жилой комплекс",
+"lat": 51.111577,
+"lon": 71.406102,
+"type": "apartments"
+},
+{
+"name": "МoD. Comfort 1",
+"lat": 51.080937,
+"lon": 71.430871,
+"type": "apartments"
+},
+{
+"name": "16а",
+"lat": 51.081834,
+"lon": 71.429684,
+"type": "apartments"
+},
+{
+"name": "МoD. Comfort 2",
+"lat": 51.080564,
+"lon": 71.429279,
+"type": "apartments"
+},
+{
+"name": "Пост",
+"lat": 51.081177,
+"lon": 71.430301,
+"type": "yes"
+},
+{
+"name": "ЖК Nexpo Union 2",
+"lat": 51.084363,
+"lon": 71.42196,
+"type": "apartments"
+},
+{
+"name": "ЖК Nexpo Union",
+"lat": 51.085182,
+"lon": 71.422305,
+"type": "apartments"
+},
+{
+"name": "ЖК Nexpo Aura",
+"lat": 51.088776,
+"lon": 71.42324,
+"type": "construction"
+},
+{
+"name": "Quantum TECH School",
+"lat": 51.086522,
+"lon": 71.420264,
+"type": "school"
+},
+{
+"name": "ЖК Uly Dala Avenue",
+"lat": 51.101898,
+"lon": 71.387307,
+"type": "apartments"
+},
+{
+"name": "ЖК Altyn Besik",
+"lat": 51.101981,
+"lon": 71.385777,
+"type": "apartments"
+},
+{
+"name": "Chery",
+"lat": 51.097759,
+"lon": 71.392933,
+"type": "yes"
+},
+{
+"name": "iPlaza",
+"lat": 51.106579,
+"lon": 71.430164,
+"type": "office"
+},
+{
+"name": "Buqar Jyrau Exclusive - 2 блок D",
+"lat": 51.104604,
+"lon": 71.399008,
+"type": "yes"
+},
+{
+"name": "Buqar Jyrau Exclusive - 2 блок F",
+"lat": 51.105103,
+"lon": 71.400079,
+"type": "yes"
+},
+{
+"name": "Buqar Jyrau Exclusive - 2 блок E",
+"lat": 51.105226,
+"lon": 71.399282,
+"type": "yes"
+},
+{
+"name": "ЖК Salman City - 1",
+"lat": 51.09714,
+"lon": 71.38248,
+"type": "yes"
+},
+{
+"name": "ЖК Salman City - 2",
+"lat": 51.095628,
+"lon": 71.381223,
+"type": "yes"
+},
+{
+"name": "ЖК Сердце столицы 6 очередь",
+"lat": 51.105207,
+"lon": 71.395763,
+"type": "yes"
+},
+{
+"name": "Math Language",
+"lat": 51.097693,
+"lon": 71.435287,
+"type": "kindergarten"
+},
+{
+"name": "Garden View-2",
+"lat": 51.101664,
+"lon": 71.409703,
+"type": "apartments"
+},
+{
+"name": "Garden View-3",
+"lat": 51.101389,
+"lon": 71.412114,
+"type": "apartments"
+},
+{
+"name": "БЦ Aspan Tower",
+"lat": 51.107019,
+"lon": 71.398611,
+"type": "office"
+},
+{
+"name": "ЖК Arena Towers 2 очередь",
+"lat": 51.106896,
+"lon": 71.396397,
+"type": "apartments"
+},
+{
+"name": "ЖК Arena Unity 1",
+"lat": 51.107242,
+"lon": 71.394865,
+"type": "apartments"
+},
+{
+"name": "ЖК Arena Unity 2",
+"lat": 51.107438,
+"lon": 71.392278,
+"type": "apartments"
+},
+{
+"name": "ЖК Arena Lite",
+"lat": 51.107781,
+"lon": 71.390914,
+"type": "apartments"
+},
+{
+"name": "ЖК Сердце столицы 5 очередь",
+"lat": 51.105882,
+"lon": 71.395989,
+"type": "apartments"
+},
+{
+"name": "ЖК Arena city-2",
+"lat": 51.105535,
+"lon": 71.391787,
+"type": "apartments"
+},
+{
+"name": "ЖК Arena Style 2",
+"lat": 51.105672,
+"lon": 71.390206,
+"type": "apartments"
+},
+{
+"name": "West side",
+"lat": 51.105899,
+"lon": 71.387455,
+"type": "apartments"
+},
+{
+"name": "ЖК Horizon",
+"lat": 51.113046,
+"lon": 71.388063,
+"type": "construction"
+},
+{
+"name": "ЖК Shugyla",
+"lat": 51.111292,
+"lon": 71.387442,
+"type": "apartments"
+},
+{
+"name": "ЖК Safia",
+"lat": 51.109504,
+"lon": 71.386583,
+"type": "apartments"
+},
+{
+"name": "ЖК GalaOne",
+"lat": 51.099249,
+"lon": 71.380153,
+"type": "construction"
+},
+{
+"name": "ЖК Arena Towers 1",
+"lat": 51.110968,
+"lon": 71.397762,
+"type": "apartments"
+},
+{
+"name": "Ботаникалық бақ",
+"lat": 51.107547,
+"lon": 71.417092,
+"type": "park"
+},
+{
+"name": "Бейбітшілік пен Келісім аллеясы",
+"lat": 51.09389,
+"lon": 71.417871,
+"type": "park"
+},
+{
+"name": "NU Park",
+"lat": 51.087525,
+"lon": 71.399261,
+"type": "park"
+}
+]

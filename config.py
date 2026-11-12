@@ -7,14 +7,18 @@ measured fact. Change them here and rerun main.py to see the effect.
 from datetime import timedelta, timezone
 
 # ---------------------------------------------------------------- area
-# Walkable area between Astana IT University and Mega Silk Way (Astana, EXPO district).
-AREA_CENTER = (51.0900, 71.4125)  # (lat, lon)
-AREA_RADIUS_M = 700
+# Walkable area in Astana's EXPO district: Astana IT University, the EXPO sphere (Nur Alem),
+# Mega Silk Way, Nazarbayev University and the Botanical Garden.
+AREA_CENTER = (51.0975, 71.4085)  # (lat, lon)
+AREA_RADIUS_M = 1700
 PROJECTED_CRS = "EPSG:32642"  # UTM zone 42N, metres. Astana is at 71.4 deg E.
 
 PLACES = {
     "aitu": ("Astana IT University", 51.0908607, 71.4184149),
     "megasilkway": ("Mega Silk Way", 51.089182, 71.406678),
+    "nuralem": ("Nur Alem, the EXPO sphere", 51.0893, 71.4172),
+    "nu": ("Nazarbayev University", 51.0905, 71.3985),
+    "botanical": ("Botanical Garden", 51.1061, 71.4166),
 }
 DEFAULT_START = "aitu"
 DEFAULT_END = "megasilkway"
@@ -26,8 +30,13 @@ DEFAULT_TIME = "16:00"
 # ---------------------------------------------------------------- shade
 METERS_PER_LEVEL = 3.2          # building:levels -> height
 DEFAULT_BUILDING_HEIGHT = 9.0   # used when OSM has neither height nor levels (about 3 floors)
-MAX_SHADOW_LENGTH = 250.0       # cap for a very low sun, so shadows stay finite
+DEFAULT_HEIGHT_BY_TYPE = {      # small building types without a height or levels tag
+    "house": 6.0, "detached": 6.0, "semidetached_house": 6.0, "garage": 3.0, "garages": 3.0,
+    "shed": 3.0, "kiosk": 3.0, "service": 4.0, "hut": 3.0, "roof": 4.0,
+}
+MAX_SHADOW_LENGTH = 250.0       # cap for a very low sun: no building's shadow is longer than this
 TREE_CROWN_RADIUS_M = 3.0       # a tree or tree row shades this far around itself
+CURVE_SLICES = 8                # a dome, a sphere or a pyramid roof is cut into this many slices for shadows
 
 # ---------------------------------------------------------------- search (A*)
 # Edge cost = length * access_multiplier * (1 + sun_weight * sun_fraction) + crossing_extra_m.

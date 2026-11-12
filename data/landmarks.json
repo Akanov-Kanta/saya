@@ -1,0 +1,7 @@
+{
+  "way/1461813334": {
+    "shape": "sphere",
+    "name": "Nur Alem, the EXPO sphere (Alem.ai)",
+    "note": "A glass sphere about 80 m across with its top at 100 m. OSM tags it as a 100 m building part with a round roof, so the sphere shape is set here by hand."
+  }
+}

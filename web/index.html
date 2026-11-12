@@ -2,67 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SAYA shade routes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SAYA · shade-aware routes for everyone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400..600,0..1,0&display=block" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }</script>
 </head>
 <body>
-  <div id="map"></div>
+  <div id="map" aria-label="3D map of the EXPO district, Astana"></div>
 
-  <aside id="panel">
-    <header>
-      <h1>SAYA</h1>
-      <p class="sub">Accessible, shade-aware walking routes · Astana EXPO district</p>
+  <aside id="panel" aria-label="Trip planner">
+    <button class="sheet-handle" id="sheet-handle" aria-label="Show or hide the planner"><span></span></button>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <button type="button" class="summary" id="summary" hidden></button>
+
+    <header class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>SAYA</h1>
+        <p>Shade-aware routes anyone can walk · Astana EXPO</p>
+      </div>
     </header>
 
-    <section class="controls">
-      <div class="row">
-        <label>Date <input type="date" id="date"></label>
-        <label>Who walks <select id="profile"></select></label>
+    <section class="card trip" aria-label="Start and destination">
+      <div class="fields">
+        <label class="field" data-field="start">
+          <span class="pin pin-a" aria-hidden="true">A</span>
+          <input id="from" type="text" placeholder="From: search or click the map" autocomplete="off" spellcheck="false" aria-label="Start">
+          <button type="button" class="field-clear" data-clear="start" aria-label="Clear start"><span class="ms">close</span></button>
+        </label>
+        <label class="field" data-field="end">
+          <span class="pin pin-b" aria-hidden="true">B</span>
+          <input id="to" type="text" placeholder="To: search or click the map" autocomplete="off" spellcheck="false" aria-label="Destination">
+          <button type="button" class="field-clear" data-clear="end" aria-label="Clear destination"><span class="ms">close</span></button>
+        </label>
+        <button type="button" id="swap" class="swap" aria-label="Swap start and destination"><span class="ms">swap_vert</span></button>
       </div>
-      <div class="time-row">
-        <button id="play" class="icon" title="Play the day">&#9654;</button>
-        <div class="time-box">
-          <div class="time-label"><span id="time-text">16:00</span><span class="muted">Astana, UTC+5</span></div>
-          <input type="range" id="time" min="300" max="1320" step="15" value="960" aria-label="Time of day">
-          <div class="ticks"><span>05:00</span><span>09:00</span><span>13:00</span><span>17:00</span><span>22:00</span></div>
+      <ul id="suggest" class="suggest" role="listbox" hidden></ul>
+      <div class="chips" id="chips" aria-label="Places"></div>
+    </section>
+
+    <section class="card" aria-labelledby="who-title">
+      <h2 id="who-title">Who is walking?</h2>
+      <div class="segmented" id="profiles" role="radiogroup" aria-labelledby="who-title"></div>
+    </section>
+
+    <section class="card when" aria-labelledby="when-title">
+      <div class="when-head">
+        <h2 id="when-title">When</h2>
+        <input type="date" id="date" aria-label="Date">
+      </div>
+      <div class="clock">
+        <button type="button" id="play" class="play" aria-label="Play the whole day"><span class="ms">play_arrow</span></button>
+        <div class="clock-text">
+          <div class="time" id="time-text">16:00</div>
+          <div class="sun-line" id="sun-line"></div>
+        </div>
+        <div class="compass" id="compass" aria-hidden="true">
+          <svg viewBox="-30 -30 60 60"><circle r="27" class="ring"/><text y="-17">N</text>
+            <g id="compass-shadow"><path d="M0 0 L0 22" class="shadow-ray"/><path d="M-4 17 L0 23 L4 17" class="shadow-tip"/></g>
+            <g id="compass-sun"><circle cx="0" cy="-21" r="4.5" class="sun-dot"/></g></svg>
         </div>
       </div>
-      <div id="sun" class="sun">
-        <svg id="sun-arrow" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
-          <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-opacity=".25"/>
-          <path d="M12 3 L16 14 L12 11.5 L8 14 Z" fill="currentColor"/>
-        </svg>
-        <div id="sun-text">Loading sun position...</div>
+      <div class="timeline">
+        <svg id="sun-curve" viewBox="0 0 1020 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <input type="range" id="time" min="300" max="1320" step="15" value="960" aria-label="Time of day">
       </div>
+      <div class="ticks" id="ticks" aria-hidden="true"></div>
     </section>
 
-    <section class="controls">
-      <div id="hint" class="hint">Click the map to choose a start point.</div>
-      <div class="row buttons">
-        <button id="preset">AITU &rarr; Mega Silk Way</button>
-        <button id="swap">Swap</button>
-        <button id="clear">Clear</button>
-      </div>
-      <label class="feels">Feels like, &deg;C
-        <input type="number" id="feels" step="0.5" placeholder="from Open-Meteo">
-      </label>
-    </section>
+    <section id="result" class="result" aria-live="polite"></section>
 
-    <section id="result" class="result" hidden></section>
-    <div id="error" class="error" hidden></div>
-
-    <footer class="legend">
-      <span><i class="swatch" style="background:var(--shortest)"></i>Shortest</span>
-      <span><i class="swatch" style="background:var(--shaded)"></i>Shaded</span>
-      <span><i class="swatch" style="background:var(--shade)"></i>Shade now</span>
-      <span><i class="dot">!</i>Barrier report (simulated)</span>
-      <p class="muted">Map © OpenStreetMap contributors, OpenFreeMap · Weather: Open-Meteo</p>
+    <footer class="credits">
+      Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> ·
+      tiles <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> ·
+      weather <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
+      <a href="https://github.com/Akanov-Kanta/saya" target="_blank" rel="noopener">source</a>
     </footer>
   </aside>
 
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="app.js"></script>
+  <div class="map-tools" role="toolbar" aria-label="Map view">
+    <button type="button" id="tool-3d" class="tool on" aria-pressed="true" title="3D view"><span class="ms">view_in_ar</span><b>3D</b></button>
+    <button type="button" id="tool-shade" class="tool on" aria-pressed="true" title="Show computed shade"><span class="ms">contrast</span><b>Shade</b></button>
+    <button type="button" id="tool-buildings" class="tool on" aria-pressed="true" title="Show buildings"><span class="ms">apartment</span><b>Buildings</b></button>
+    <button type="button" id="tool-fit" class="tool" title="Show the whole area"><span class="ms">fit_screen</span><b>Area</b></button>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span><i class="sw sw-shaded"></i>Shaded route</span>
+    <span><i class="sw sw-shortest"></i>Shortest route</span>
+    <span><i class="sw sw-shade"></i>Shade now</span>
+    <span><i class="sw sw-barrier">!</i>Barrier report</span>
+  </div>
+
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <div id="toast" class="toast" role="alert" hidden></div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>

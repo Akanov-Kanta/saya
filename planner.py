@@ -63,8 +63,10 @@ class Area:
         self.node_ids = list(self.graph.nodes)
         self.node_xy = np.array([(self.graph.nodes[n]["x"], self.graph.nodes[n]["y"]) for n in self.node_ids])
         self.barriers = self._mark_barriers(barriers)
+        self.prisms = shade.building_prisms(self.buildings_m)   # cut once, reused for every sun position
         self.lock = threading.Lock()   # the web server may call from several threads
         self._cache = OrderedDict()
+        self._cache_lock = threading.Lock()
 
     def _mark_barriers(self, barriers):
         marked = []
@@ -80,20 +82,27 @@ class Area:
     def shade_at(self, when):
         """(altitude, azimuth, shade geometry, sun fraction per edge, shaded share), cached per minute."""
         key = when.isoformat(timespec="minutes")
-        if key in self._cache:
-            self._cache.move_to_end(key)
-            return self._cache[key]
+        with self._cache_lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                return self._cache[key]
         lat, lon = config.AREA_CENTER
         altitude, azimuth = sun_position(when, lat, lon)
-        geometry = shade.shade_map(self.buildings_m, self.trees_m, altitude, azimuth)
+        geometry = shade.shade_map(self.buildings_m, self.trees_m, altitude, azimuth, prisms=self.prisms)
         fractions = shade.sun_fractions(self.edges.geometry.values, geometry, altitude)
         total = self.lengths.sum()
         shaded_share = float(1 - (self.lengths * fractions).sum() / total) if total else 0.0
         result = (altitude, azimuth, geometry, fractions, shaded_share)
-        self._cache[key] = result
-        if len(self._cache) > self.CACHE_SIZE:
-            self._cache.popitem(last=False)
+        with self._cache_lock:
+            self._cache[key] = result
+            while len(self._cache) > self.CACHE_SIZE:
+                self._cache.popitem(last=False)
         return result
+
+    def warm_up(self, times):
+        """Compute the shade for these moments ahead of time (the web server does it in the background)."""
+        for when in times:
+            self.shade_at(when)
 
     def set_time(self, when) -> Network:
         """Write the sun fraction of this moment onto the graph edges. Call under self.lock."""

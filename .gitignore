@@ -4,3 +4,4 @@ __pycache__/
 data/osm_cache/
 output/
 .DS_Store
+cache/
