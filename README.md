@@ -10,7 +10,21 @@
 | 2 | **Bayesian inference** | Is it dangerously hot right now? | Prior for the month + one noisy reading (Open-Meteo "feels like") → P(dangerous heat) |
 | 3 | **MDP** (one Bellman update) | Take the shortest or the shaded route? | Both routes + P(dangerous heat) + the walker's heat vulnerability → recommended action |
 
-<p align="center"><img src="docs/map.jpg" alt="SAYA map: the recommended shaded route (solid blue) and the shortest route (dashed red) from Astana IT University to Mega Silk Way, with barrier reports and the decision panel" width="90%"></p>
+<p align="center"><img src="docs/web-3d.jpg" alt="SAYA web app at 19:00: 3D buildings with long shadows falling east, a user-picked trip with the shortest route (red) and the shaded route (dashed blue), and the panel with the time slider and the decision" width="95%"></p>
+
+## Interactive 3D map
+
+```bash
+python server.py        # then open http://127.0.0.1:8765
+```
+
+- **Time of day.** Drag the slider (05:00 to 22:00) or press ▶ to play the whole day. The shadows on the map rotate and stretch with the sun, the 3D buildings are lit from the sun's real direction, and the route is recomputed for that moment.
+- **3D buildings.** Every OSM building is extruded to the same height the shadow model uses.
+- **Your own trip.** Click the map to set the start, click again to set the destination, and drag either marker to adjust. Routing works inside the dashed circle.
+- **Who walks.** Choose wheelchair user, elderly pedestrian or pedestrian without mobility needs. The barriers, the speeds and the heat vulnerability change with the choice.
+- **Every step is visible.** The panel shows the A\* table (expanded nodes vs Dijkstra), the Bayes calculation and the MDP Q-table. These are the same numbers the CLI prints, because both call `planner.plan_trip()`.
+
+The browser only draws. The shadows, A\*, Bayes and the MDP all run in Python (FastAPI). The map uses MapLibre GL with free OpenFreeMap tiles, so no API key is needed.
 
 ## How it works
 
@@ -33,7 +47,7 @@ flowchart LR
 cost = length × access penalty × (1 + w × sun_fraction) + crossing penalty
 ```
 
-The access penalty depends on the mobility profile. Steps and a broken ramp are impassable for a wheelchair. Busy roads without a sidewalk, paving stones and crossings without a traffic light all cost extra. `w = 0` gives the shortest accessible route. `w = 3` gives the shaded one, where one metre in the sun counts as four. The heuristic is the straight-line distance to the goal. It never overestimates because no edge costs less than its own length, so A\* stays optimal. The program also runs Dijkstra (A\* with h = 0) on the same graph, only to show how many fewer nodes A\* expands (877 vs 1367).
+The access penalty depends on the mobility profile. Steps and a broken ramp are impassable for a wheelchair. Busy roads without a sidewalk, paving stones and crossings without a traffic light all cost extra. `w = 0` gives the shortest accessible route. `w = 3` gives the shaded one, where one metre in the sun counts as four. "Shortest" means the cheapest route once the accessibility penalties are counted, so at some hours the shaded route can be a few metres shorter. The heuristic is the straight-line distance to the goal. It never overestimates because no edge costs less than its own length, so A\* stays optimal. The program also runs Dijkstra (A\* with h = 0) on the same graph, only to show how many fewer nodes A\* expands (877 vs 1367).
 
 **2. Bayesian inference** (`bayes.py`). The hidden state is Dangerous or Safe heat. The sensor is the forecast "feels like" temperature, put in a bucket: cool (< 24 °C), warm (24 to 30 °C) or hot (≥ 30 °C). The forecast is noisy, so each bucket has a likelihood under each state:
 
@@ -103,8 +117,9 @@ Requires Python 3.10+.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python main.py                      # then open output/route_map.html
-python -m pytest                    # 16 tests
+python server.py                    # interactive 3D map at http://127.0.0.1:8765
+python main.py                      # console version, also saves output/route_map.html
+python -m pytest                    # 21 tests
 ```
 
 Options: `--date YYYY-MM-DD`, `--time HH:MM` (Astana time), `--profile wheelchair|elderly|standard`, `--start` / `--end` (`aitu`, `megasilkway`), `--feels-like 33` to skip the weather API, `--refresh-osm` to download the map again, and `--no-map`.
@@ -120,6 +135,7 @@ The OSM data (`data/*.graphml`, `data/*.geojson`) and the weather readings used 
 - **A\*:** on a 4-node toy map the sunny street wins with `w = 0` and the shaded street wins with `w = 3`. A broken ramp forces the wheelchair route back into the sun but leaves the pedestrian route alone. On a random 15×15 grid A\* finds exactly Dijkstra's cost while expanding fewer nodes.
 - **Bayes:** a hot reading turns a prior of 0.30 into 0.75, and the cool case is checked by hand.
 - **MDP:** transition rows sum to 1, Q equals one Bellman backup, and the decision flips from Shaded to Shortest when P(dangerous heat) drops.
+- **Web API:** shadows point west in the morning and east in the evening, the night has no sun, a user-picked trip returns the same decision as the CLI, and a point outside the map is rejected.
 
 ## Assumptions
 
@@ -133,7 +149,7 @@ Every number lives in [`config.py`](config.py) and is a labelled assumption, not
 
 ## Limitations and next steps
 
-- Load real tree canopy and building heights, for example from satellite data, or overlay [ShadeMap](https://shademap.app) on the map.
+- Load real tree canopy and building heights, for example from satellite data.
 - Let residents submit barrier reports, and run a Bayes update on each report (P(blocked | report)), as in the SONAR app.
 - Add a third action, "wait 1 hour for longer shadows", and run full value iteration over the trip legs.
 - Use elevation data so that steep slopes count against wheelchair routes.
@@ -142,20 +158,22 @@ Every number lives in [`config.py`](config.py) and is a labelled assumption, not
 
 ```
 main.py        CLI: runs the pipeline and prints every step
+server.py      web app (FastAPI): shade for any time, routes for any two points
+web/           3D map page (MapLibre GL): time slider, click to pick start and end
 config.py      all inputs and assumptions
 osm_data.py    download / load OpenStreetMap data (cached in data/)
 sun.py         solar position
 shade.py       building shadows, tree shade, sun fraction per edge
-planner.py     glue: shade + barriers on the graph, runs A* twice
+planner.py     glue: loads the area once, shade per time (cached), plan_trip() = A* -> Bayes -> MDP
 search.py      A* and the accessibility-aware edge cost
 bayes.py       heat-risk inference
 weather.py     Open-Meteo reading (cached)
 mdp.py         2-state / 2-action MDP, one Bellman update
-map_view.py    Folium HTML map
+map_view.py    static Folium HTML map for the CLI
 tests/         pytest suite
 ```
 
 ## Data
 
-- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, ODbL.
+- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, ODbL. Basemap tiles by [OpenFreeMap](https://openfreemap.org).
 - Weather data by [Open-Meteo](https://open-meteo.com), CC BY 4.0.

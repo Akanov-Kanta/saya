@@ -2,30 +2,16 @@
 
 import folium
 import geopandas as gpd
-from shapely.geometry import LineString, mapping
+from shapely.geometry import mapping
 
 import config
 
 ROUTE_COLORS = {"Shortest": "#d1495b", "Shaded": "#1f6fb2"}
 
 
-def _route_latlon(graph_latlon, edges):
-    """Edge geometries from the lat/lon graph, in the order the route uses them."""
-    points = []
-    for u, v, key in edges:
-        data = graph_latlon.edges[u, v, key]
-        line = data.get("geometry") or LineString([
-            (graph_latlon.nodes[u]["x"], graph_latlon.nodes[u]["y"]),
-            (graph_latlon.nodes[v]["x"], graph_latlon.nodes[v]["y"]),
-        ])
-        coords = [(lat, lon) for lon, lat in line.coords]
-        points.extend(coords if not points else coords[1:])
-    return points
-
-
-def build_map(graph_latlon, network, buildings, trees, routes, decision, summary_lines,
-              start, end, out_path):
+def build_map(area, network, routes, decision, summary_lines, start, end, out_path):
     lat, lon = config.AREA_CENTER
+    buildings, trees = area.buildings, area.trees
     fmap = folium.Map(location=[lat, lon], zoom_start=16, tiles="OpenStreetMap", control_scale=True)
 
     # Shade layer (computed in metres, shown in lat/lon)
@@ -54,7 +40,7 @@ def build_map(graph_latlon, network, buildings, trees, routes, decision, summary
         stats = routes[action]["stats"]
         chosen = action == decision
         folium.PolyLine(
-            _route_latlon(graph_latlon, routes[action]["result"].edges),
+            area.route_latlon(routes[action]["result"].edges),
             color=ROUTE_COLORS[action], weight=8 if chosen else 5, opacity=0.95 if chosen else 0.75,
             dash_array=None if chosen else "8 8",
             tooltip=(f"{action}{' (recommended)' if chosen else ''}: {stats['length_m']:.0f} m, "

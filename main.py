@@ -4,6 +4,7 @@
     python main.py --date 2026-08-20 --time 16:00    # a cool summer day
     python main.py --profile standard --time 18:00
     python main.py --feels-like 33                   # skip the weather API, use your own reading
+    python server.py                                 # interactive 3D web map instead
 
 Pipeline (each step feeds the next):
   1. A* search      builds two accessible routes: shortest and shaded
@@ -16,12 +17,10 @@ import math
 from datetime import datetime
 from pathlib import Path
 
-import bayes
 import config
 import mdp
 import osm_data
 import planner
-import weather
 from map_view import build_map
 from sun import compass
 
@@ -55,12 +54,19 @@ def main():
     print("SAYA: accessible, shade-aware walking routes (Astana, EXPO district)")
     print(f"Trip: {start[0]} -> {end[0]} | {when:%Y-%m-%d %H:%M} (UTC+5) | {profile['label']}")
 
+    area = planner.Area(*osm_data.load_area(refresh=args.refresh_osm))
+    try:
+        trip = planner.plan_trip(area, start[1:], end[1:], when, args.profile, args.feels_like)
+    except ValueError as error:
+        raise SystemExit(f"Cannot plan this trip: {error}")
+    except Exception as error:  # weather lookup failed (offline, date too far ahead)
+        raise SystemExit(f"Weather lookup failed ({error}). Rerun with --feels-like <degC>.")
+    network, routes, b = trip["network"], trip["routes"], trip["belief"]
+
     # ------------------------------------------------------------ 0. data, sun, shade
     header("0. Map data, sun position and shade")
-    graph, buildings, trees, barriers = osm_data.load_area(refresh=args.refresh_osm)
-    network = planner.prepare_network(graph, buildings, trees, barriers, when)
-    print(f"OpenStreetMap: {len(graph)} walk nodes, {graph.number_of_edges()} edges, "
-          f"{len(buildings)} buildings, {len(trees)} trees / tree rows")
+    print(f"OpenStreetMap: {len(area.graph)} walk nodes, {area.graph.number_of_edges()} edges, "
+          f"{len(area.buildings)} buildings, {len(area.trees)} trees / tree rows")
     if network.altitude > 0:
         ten_m = 10 / math.tan(math.radians(network.altitude))
         print(f"Sun: altitude {network.altitude:.1f} deg, azimuth {network.azimuth:.0f} deg "
@@ -77,12 +83,9 @@ def main():
 
     # ------------------------------------------------------------ 1. A*
     header("1. A* search: two accessible routes")
-    start_node = planner.nearest_node(network.graph, start[1], start[2])
-    goal_node = planner.nearest_node(network.graph, end[1], end[2])
-    print(f"Input: start node {start_node}, goal node {goal_node}, profile '{args.profile}'")
+    print(f"Input: start node {trip['start_node']}, goal node {trip['goal_node']}, profile '{args.profile}'")
     print("Edge cost = length x access penalty x (1 + w x sun_fraction) + crossing penalty")
     print("Heuristic h(n) = straight-line distance to the goal (admissible: no edge costs less than its length)")
-    routes = planner.plan_routes(network, start_node, goal_node, profile)
     print(f"\n{'route':9}{'w':>4}{'length':>9}{'in sun':>8}{'minutes':>9}{'sun min':>9}"
           f"{'A* expanded':>13}{'Dijkstra':>10}")
     for action, route in routes.items():
@@ -98,18 +101,10 @@ def main():
 
     # ------------------------------------------------------------ 2. Bayes
     header("2. Bayesian inference: is it dangerously hot?")
-    if args.feels_like is not None:
-        feels_like, source = args.feels_like, "entered by hand (--feels-like)"
-    else:
-        try:
-            feels_like, source = weather.feels_like_at(when, start[1], start[2])
-        except Exception as error:
-            raise SystemExit(f"Weather lookup failed ({error}). Rerun with --feels-like <degC>.")
-    reading = bayes.reading_bucket(feels_like)
-    prior = bayes.prior_for_month(when.month)
-    b = bayes.heat_posterior(prior, reading)
+    reading, prior = b["reading"], b["prior"]
     print(f"Input: prior P(Dangerous) for month {when.month} = {prior:.2f}")
-    print(f"       sensor = {source} -> reading '{reading}'")
+    print(f"       sensor = {trip['weather_source']} -> feels like {trip['feels_like']:.1f} degC, "
+          f"reading '{reading}'")
     print(f"P({reading} | Dangerous) = {b['p_reading_given_dangerous']:.2f}, "
           f"P({reading} | Safe) = {b['p_reading_given_safe']:.2f}")
     print(f"P({reading}) = {prior:.2f} x {b['p_reading_given_dangerous']:.2f} + {1 - prior:.2f} x "
@@ -121,10 +116,7 @@ def main():
 
     # ------------------------------------------------------------ 3. MDP
     header("3. MDP: Shortest or Shaded?")
-    stats = {a: routes[a]["stats"] for a in mdp.ACTIONS}
-    transitions, rewards = mdp.build_model(stats, b["posterior"], profile["heat_vulnerability"])
-    values = mdp.terminal_values()
-    q, new_values, policy = mdp.bellman_update(transitions, rewards, values)
+    transitions, rewards, q, values = trip["transitions"], trip["rewards"], trip["q"], trip["values"]
     print(f"Input: states {mdp.STATES}, actions {mdp.ACTIONS}, gamma = {config.MDP_GAMMA}")
     print(f"       P(Dangerous) = {b['posterior']:.3f}, heat vulnerability x{profile['heat_vulnerability']}, "
           f"V0 = {values}")
@@ -134,7 +126,7 @@ def main():
             t = transitions[(state, action)]
             print(f"{state + ', ' + action:28}{t['Comfortable']:>11.3f}{t['HeatStressed']:>12.3f}"
                   f"{rewards[(state, action)]:>8.1f}{q[(state, action)]:>9.2f}")
-    decision = policy["Comfortable"]
+    decision = trip["decision"]
     other = "Shaded" if decision == "Shortest" else "Shortest"
     c = transitions[("Comfortable", decision)]
     print(f"\nQ(s,a) = R + gamma x [P(->Comf.) x 0 + P(->Stress) x {values['HeatStressed']:g}]")
@@ -154,14 +146,16 @@ def main():
         summary = [
             f"{start[0]} &rarr; {end[0]}",
             f"{when:%d %b %Y, %H:%M} &middot; {profile['label']}",
-            f"Sun {network.altitude:.0f}&deg; {compass(network.azimuth)} &middot; feels like {feels_like:.1f} &deg;C",
+            f"Sun {network.altitude:.0f}&deg; {compass(network.azimuth)} &middot; "
+            f"feels like {trip['feels_like']:.1f} &deg;C",
             f"P(dangerous heat) = {b['posterior']:.0%}",
             f"<b>Recommended: {decision}</b> &middot; {chosen['length_m']:.0f} m &middot; "
             f"{chosen['walk_min']:.0f} min &middot; {chosen['sun_share']:.0%} sun",
         ]
-        path = build_map(graph, network, buildings, trees, routes, decision, summary, start, end,
+        path = build_map(area, network, routes, decision, summary, start, end,
                          Path(__file__).parent / args.map)
         print(f"Map saved to {path}")
+        print("For the interactive 3D map with a time slider run: python server.py")
 
 
 if __name__ == "__main__":

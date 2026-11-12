@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAYA shade routes</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="map"></div>
+
+  <aside id="panel">
+    <header>
+      <h1>SAYA</h1>
+      <p class="sub">Accessible, shade-aware walking routes · Astana EXPO district</p>
+    </header>
+
+    <section class="controls">
+      <div class="row">
+        <label>Date <input type="date" id="date"></label>
+        <label>Who walks <select id="profile"></select></label>
+      </div>
+      <div class="time-row">
+        <button id="play" class="icon" title="Play the day">&#9654;</button>
+        <div class="time-box">
+          <div class="time-label"><span id="time-text">16:00</span><span class="muted">Astana, UTC+5</span></div>
+          <input type="range" id="time" min="300" max="1320" step="15" value="960" aria-label="Time of day">
+          <div class="ticks"><span>05:00</span><span>09:00</span><span>13:00</span><span>17:00</span><span>22:00</span></div>
+        </div>
+      </div>
+      <div id="sun" class="sun">
+        <svg id="sun-arrow" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+          <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+          <path d="M12 3 L16 14 L12 11.5 L8 14 Z" fill="currentColor"/>
+        </svg>
+        <div id="sun-text">Loading sun position...</div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div id="hint" class="hint">Click the map to choose a start point.</div>
+      <div class="row buttons">
+        <button id="preset">AITU &rarr; Mega Silk Way</button>
+        <button id="swap">Swap</button>
+        <button id="clear">Clear</button>
+      </div>
+      <label class="feels">Feels like, &deg;C
+        <input type="number" id="feels" step="0.5" placeholder="from Open-Meteo">
+      </label>
+    </section>
+
+    <section id="result" class="result" hidden></section>
+    <div id="error" class="error" hidden></div>
+
+    <footer class="legend">
+      <span><i class="swatch" style="background:var(--shortest)"></i>Shortest</span>
+      <span><i class="swatch" style="background:var(--shaded)"></i>Shaded</span>
+      <span><i class="swatch" style="background:var(--shade)"></i>Shade now</span>
+      <span><i class="dot">!</i>Barrier report (simulated)</span>
+      <p class="muted">Map © OpenStreetMap contributors, OpenFreeMap · Weather: Open-Meteo</p>
+    </footer>
+  </aside>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
