@@ -102,7 +102,7 @@ function addBarriers() {
   for (const barrier of state.meta.barriers) {
     const el = document.createElement('div');
     el.className = 'barrier-marker';
-    el.innerHTML = `<span class="ms">${BARRIER_ICON[barrier.type] || 'warning'}</span>`;
+    el.innerHTML = `<span class="dot"><span class="ms">${BARRIER_ICON[barrier.type] || 'warning'}</span></span>`;
     el.setAttribute('aria-label', barrier.name);
     const source = barrier.source === 'OpenStreetMap' ? 'Mapped in OpenStreetMap' : 'Simulated resident report';
     el.addEventListener('mouseenter', () => showTooltip(el, `<b>${barrier.name}</b><span>${source} · impassable for a person with disabilities</span>`));
