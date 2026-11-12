@@ -14,14 +14,16 @@ AREA_RADIUS_M = 1700
 PROJECTED_CRS = "EPSG:32642"  # UTM zone 42N, metres. Astana is at 71.4 deg E.
 
 PLACES = {
-    "aitu": ("Astana IT University", 51.0908607, 71.4184149),
+    "qairu": ("QAIRU, Qazaq AI Research University (Alem.ai)", 51.089157, 71.416765),
     "megasilkway": ("Mega Silk Way", 51.089182, 71.406678),
-    "nuralem": ("Nur Alem, the EXPO sphere", 51.0893, 71.4172),
     "nu": ("Nazarbayev University", 51.0905, 71.3985),
+    "aitu": ("Astana IT University", 51.0908607, 71.4184149),
+    "nuralem": ("Nur Alem, the EXPO sphere", 51.0893, 71.4172),
     "botanical": ("Botanical Garden", 51.1061, 71.4166),
 }
-DEFAULT_START = "aitu"
-DEFAULT_END = "megasilkway"
+WEATHER_POINT = (51.0909, 71.4184)   # where the Open-Meteo reading is taken for the whole area (EXPO)
+DEFAULT_START = "qairu"
+DEFAULT_END = "nu"
 
 ASTANA_TZ = timezone(timedelta(hours=5))  # Kazakhstan has used UTC+5 nationwide since March 2024
 DEFAULT_DATE = "2026-07-15"  # a summer day, so the heat question matters
@@ -49,37 +51,32 @@ FOOT_HIGHWAYS = {"footway", "pedestrian", "path", "living_street", "corridor"}
 BUSY_ROADS = {"primary", "secondary", "tertiary", "unclassified", "trunk",
               "primary_link", "secondary_link", "tertiary_link", "trunk_link"}
 
-# Mobility profiles. A multiplier of None means the profile cannot pass at all.
+# Two profiles. A multiplier of None means the person cannot pass at all.
+# Barrier types (data/barriers.json, plus steps and raised kerbs from OSM):
+#   steps, high_kerb (kerb without a ramp), broken_ramp, narrow (pavement narrower than a
+#   wheelchair, e.g. blocked by parked cars), steep (ramp steeper than about 8 %), construction.
 PROFILES = {
-    "wheelchair": {
-        "label": "Wheelchair user",
-        "speed_mps": 0.9,
-        "heat_vulnerability": 1.5,
+    "disabled": {
+        "label": "Person with disabilities",
+        "speed_mps": 0.9,                # wheelchair or walking aid
+        "heat_vulnerability": 1.5,       # many wheelchair users sweat less and overheat faster
         "road_no_sidewalk": 1.6,         # rolling along a quiet road or parking lane
         "busy_road": 3.0,                # rolling along a road with traffic
         "paving_stones": 1.2,            # bumpy surface
         "uncontrolled_crossing_m": 60,   # extra metres for a crossing without a traffic light
-        "barrier": {"steps": None, "broken_ramp": None, "construction": None},
-    },
-    "elderly": {
-        "label": "Elderly pedestrian",
-        "speed_mps": 1.0,
-        "heat_vulnerability": 1.8,
-        "road_no_sidewalk": 1.4,
-        "busy_road": 2.0,
-        "paving_stones": 1.05,
-        "uncontrolled_crossing_m": 40,
-        "barrier": {"steps": 3.0, "broken_ramp": 1.0, "construction": None},
+        "barrier": {"steps": None, "high_kerb": None, "broken_ramp": None, "narrow": None,
+                    "steep": None, "construction": None},
     },
     "standard": {
-        "label": "Pedestrian without mobility needs",
+        "label": "Person without disabilities",
         "speed_mps": 1.3,
         "heat_vulnerability": 1.0,
         "road_no_sidewalk": 1.1,
         "busy_road": 1.2,
         "paving_stones": 1.0,
         "uncontrolled_crossing_m": 0,
-        "barrier": {"steps": 1.0, "broken_ramp": 1.0, "construction": None},
+        "barrier": {"steps": 1.0, "high_kerb": 1.0, "broken_ramp": 1.0, "narrow": 1.0,
+                    "steep": 1.0, "construction": None},   # a construction site blocks everyone
     },
 }
 

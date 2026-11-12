@@ -24,7 +24,7 @@ def test_cool_reading_lowers_heat_probability():
     assert bayes.heat_posterior(0.25, "cool")["posterior"] == pytest.approx(0.0125 / 0.425)
 
 
-# Route numbers from a real run (wheelchair user, AITU -> Mega Silk Way, 15 July 16:00)
+# Route numbers from a real run (person with disabilities, AITU -> Mega Silk Way, 15 July 16:00)
 ROUTES = {
     "Shortest": {"walk_min": 28.8, "sun_min": 28.8, "sun_share": 1.00},
     "Shaded":   {"walk_min": 30.6, "sun_min": 24.7, "sun_share": 0.81},

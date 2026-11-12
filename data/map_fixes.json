@@ -1,0 +1,29 @@
+{
+  "auto_join_m": 6,
+  "connections": [
+    {
+      "from": 13911504399,
+      "to": 13911504409,
+      "crossing": "traffic_signals",
+      "note": "Crossing of Qabanbay Batyr Avenue between Mega Silk Way and Nazarbayev University. OSM draws it in pieces that stop at the carriageway. Assumed to have a traffic light."
+    },
+    {
+      "from": 13911504422,
+      "to": 5306138775,
+      "note": "The same crossing stops 22 m short of the sidewalk in front of Nazarbayev University."
+    }
+  ],
+  "entrances": [
+    {
+      "name": "Nazarbayev University, main entrance",
+      "lat": 51.090061,
+      "lon": 71.401032,
+      "entrance": "main",
+      "building": [
+        "way/424894670",
+        "way/425721163"
+      ],
+      "note": "OSM has no entrance node for Nazarbayev University. The main entrance is the domed atrium on the east side, facing the plaza, Qabanbay Batyr Avenue and the crossing to Mega Silk Way."
+    }
+  ]
+}

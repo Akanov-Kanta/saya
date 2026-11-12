@@ -6,6 +6,7 @@
     "lat": 51.088813,
     "lon": 71.411393,
     "radius_m": 6,
+    "source": "simulated",
     "note": "SIMULATED resident report for the demo, not a verified real barrier"
   },
   {
@@ -15,6 +16,57 @@
     "lat": 51.091344,
     "lon": 71.418368,
     "radius_m": 6,
+    "source": "simulated",
     "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  },
+  {
+    "id": 3,
+    "type": "narrow",
+    "name": "Pavement blocked by parked cars on Nurlan Balgymbayev Street",
+    "lat": 51.090589,
+    "lon": 71.403244,
+    "radius_m": 5,
+    "source": "simulated",
+    "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  },
+  {
+    "id": 4,
+    "type": "high_kerb",
+    "name": "Kerb without a ramp at the crossing on Qabanbay Batyr Avenue, north of Mega Silk Way",
+    "lat": 51.094601,
+    "lon": 71.404889,
+    "radius_m": 5,
+    "source": "simulated",
+    "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  },
+  {
+    "id": 5,
+    "type": "steep",
+    "name": "Steep ramp (about 10 %) on the path to the Botanical Garden",
+    "lat": 51.102754,
+    "lon": 71.4078,
+    "radius_m": 5,
+    "source": "simulated",
+    "note": "SIMULATED resident report for the demo, not a verified real barrier"
+  },
+  {
+    "id": 6,
+    "type": "high_kerb",
+    "name": "Raised kerb, west end of the crossing (kerb=raised in OpenStreetMap)",
+    "lat": 51.096242,
+    "lon": 71.420332,
+    "radius_m": 3,
+    "source": "OpenStreetMap",
+    "note": "Mapped in OpenStreetMap as barrier=kerb, kerb=raised"
+  },
+  {
+    "id": 7,
+    "type": "high_kerb",
+    "name": "Raised kerb, east end of the crossing (kerb=raised in OpenStreetMap)",
+    "lat": 51.09619,
+    "lon": 71.420712,
+    "radius_m": 3,
+    "source": "OpenStreetMap",
+    "note": "Mapped in OpenStreetMap as barrier=kerb, kerb=raised"
   }
 ]

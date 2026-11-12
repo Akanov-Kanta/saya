@@ -49,7 +49,12 @@
 
     <section class="card" aria-labelledby="who-title">
       <h2 id="who-title">Who is walking?</h2>
-      <div class="segmented" id="profiles" role="radiogroup" aria-labelledby="who-title"></div>
+      <div class="segmented two" id="profiles" role="radiogroup" aria-labelledby="who-title"></div>
+      <p class="auto-note" id="auto-note"><span class="ms">auto_awesome</span>SAYA picks the way for you: barrier-free, and in the shade when the heat makes it worth it.</p>
+      <div class="choice" id="choice-box" hidden>
+        <h2 id="choice-title">I want</h2>
+        <div class="toggle" id="choice" role="radiogroup" aria-labelledby="choice-title"></div>
+      </div>
     </section>
 
     <section class="card when" aria-labelledby="when-title">
@@ -94,10 +99,13 @@
   </div>
 
   <div class="legend" aria-label="Legend">
-    <span><i class="sw sw-shaded"></i>Shaded route</span>
-    <span><i class="sw sw-shortest"></i>Shortest route</span>
+    <span><i class="sw sw-access"></i>Barrier-free route</span>
+    <span><i class="sw sw-shortest"></i>Fastest</span>
+    <span><i class="sw sw-shaded"></i>Most shade</span>
+    <span><i class="sw sw-direct"></i>Direct way with barriers</span>
     <span><i class="sw sw-shade"></i>Shade now</span>
-    <span><i class="sw sw-barrier">!</i>Barrier report</span>
+    <span><i class="sw sw-barrier">!</i>Barrier</span>
+    <span><i class="sw sw-fix"><span class="ms">build</span></i>Map fix</span>
   </div>
 
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>

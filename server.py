@@ -148,9 +148,11 @@ def meta():
         "places": {key: {"name": name, "lat": lat, "lon": lon} for key, (name, lat, lon) in config.PLACES.items()},
         "search": places,
         "profiles": {key: profile["label"] for key, profile in config.PROFILES.items()},
-        "defaults": {"date": config.DEFAULT_DATE, "time": config.DEFAULT_TIME, "profile": "wheelchair",
+        "defaults": {"date": config.DEFAULT_DATE, "time": config.DEFAULT_TIME, "profile": "disabled",
                      "start": config.DEFAULT_START, "end": config.DEFAULT_END},
-        "barriers": [{k: r[k] for k in ("id", "type", "name", "lat", "lon")} for r in area.barriers],
+        "barriers": [{**{k: r[k] for k in ("id", "type", "name", "lat", "lon")}, "source": r.get("source", "simulated")}
+                     for r in area.barriers],
+        "map_fixes": [j for j in area.map_fixes if not j["note"].startswith("footpath ends")],
     }
 
 
@@ -177,7 +179,7 @@ class TripRequest(BaseModel):
     end: tuple[float, float]
     date: str = config.DEFAULT_DATE
     time: str = config.DEFAULT_TIME
-    profile: str = "wheelchair"
+    profile: str = "disabled"
     feels_like: float | None = None
 
 
@@ -196,11 +198,15 @@ def route(trip_request: TripRequest):
                                  "Type a feels-like temperature instead.")
 
     network = trip["network"]
-    routes = {}
-    for action, route_data in trip["routes"].items():
+
+    def describe(route_data):
         stats = {k: (round(v, 3) if isinstance(v, float) else v) for k, v in route_data["stats"].items()}
         coords = [[lon, lat] for lat, lon in area.route_latlon(route_data["result"].edges)]
-        routes[action] = {"stats": stats, "coords": coords}
+        return {"stats": stats, "coords": coords, "barriers": route_data.get("barriers", [])}
+
+    routes = {action: describe(route_data) for action, route_data in trip["routes"].items()}
+    same = routes["Shortest"]["coords"] == routes["Shaded"]["coords"]
+    point = lambda p: {"lat": round(p[0], 7), "lon": round(p[1], 7), "entrance": p[2]}
     mdp_rows = [
         {"state": s, "action": a,
          "p_comfortable": round(trip["transitions"][(s, a)]["Comfortable"], 3),
@@ -211,8 +217,11 @@ def route(trip_request: TripRequest):
     ]
     return {
         "sun": sun_info(network.altitude, network.azimuth),
+        "profile": trip["profile_key"],
         "start_node": trip["start_node"], "goal_node": trip["goal_node"],
-        "routes": routes,
+        "start_point": point(trip["start_point"]), "end_point": point(trip["end_point"]),
+        "routes": routes, "same_route": same,
+        "direct": describe(trip["direct"]) if trip["direct"] else None,
         "weather": {"feels_like": trip["feels_like"], "source": trip["weather_source"]},
         "bayes": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in trip["belief"].items()},
         "mdp": {"rows": mdp_rows, "gamma": config.MDP_GAMMA, "values": trip["values"],

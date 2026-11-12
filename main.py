@@ -1,15 +1,16 @@
 """SAYA: an accessible, shade-aware walking route for one summer trip in Astana.
 
-    python main.py                                   # hot day, wheelchair user
+    python main.py                                   # QAIRU -> Nazarbayev University, person with disabilities
     python main.py --date 2026-08-20 --time 16:00    # a cool summer day
-    python main.py --profile standard --time 18:00
+    python main.py --profile standard --time 18:00   # person without disabilities
     python main.py --feels-like 33                   # skip the weather API, use your own reading
     python server.py                                 # interactive 3D web map instead
 
 Pipeline (each step feeds the next):
-  1. A* search      builds two accessible routes: shortest and shaded
+  1. A* search      builds two routes the person can pass: fastest (w = 0) and most shade (w = 3)
   2. Bayes          turns the weather reading into P(dangerous heat)
-  3. MDP            uses both routes + P(dangerous heat) to choose one
+  3. MDP            uses both routes + P(dangerous heat) to pick one for a person with disabilities,
+                    and to suggest one to a person without disabilities
 """
 
 import argparse
@@ -35,7 +36,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--date", default=config.DEFAULT_DATE, help="YYYY-MM-DD (default: %(default)s)")
     parser.add_argument("--time", default=config.DEFAULT_TIME, help="HH:MM Astana time (default: %(default)s)")
-    parser.add_argument("--profile", default="wheelchair", choices=config.PROFILES)
+    parser.add_argument("--profile", default="disabled", choices=config.PROFILES)
     parser.add_argument("--start", default=config.DEFAULT_START, choices=config.PLACES)
     parser.add_argument("--end", default=config.DEFAULT_END, choices=config.PLACES)
     parser.add_argument("--feels-like", type=float, help="use this feels-like degC instead of Open-Meteo")
@@ -75,6 +76,12 @@ def main():
     else:
         print(f"Sun is below the horizon (altitude {network.altitude:.1f} deg): everything is in shade")
     print(f"Shade covers {network.shaded_share:.0%} of all path length at this time")
+    fixes = [j for j in area.map_fixes if not j["note"].startswith("footpath ends")]
+    print(f"Map fixes: {len(fixes)} links from data/map_fixes.json, "
+          f"{len(area.map_fixes) - len(fixes)} footpath gaps under 6 m joined")
+    for label, point in (("Start", trip["start_point"]), ("End", trip["end_point"])):
+        if point[2]:
+            print(f"{label} snapped to the building entrance: {point[2]}")
     for report in network.barriers:
         rule = profile["barrier"].get(report["type"], 1.0)
         effect = "impassable" if rule is None else f"cost x{rule:g}"
@@ -82,7 +89,7 @@ def main():
               f"-> {report['edges_marked']} edges, {effect} for this profile")
 
     # ------------------------------------------------------------ 1. A*
-    header("1. A* search: two accessible routes")
+    header("1. A* search: two routes this person can pass")
     print(f"Input: start node {trip['start_node']}, goal node {trip['goal_node']}, profile '{args.profile}'")
     print("Edge cost = length x access penalty x (1 + w x sun_fraction) + crossing penalty")
     print("Heuristic h(n) = straight-line distance to the goal (admissible: no edge costs less than its length)")
@@ -96,6 +103,10 @@ def main():
     print(f"\nOutput: the shaded route is {shaded['length_m'] - short['length_m']:+.0f} m and "
           f"{shaded['walk_min'] - short['walk_min']:+.1f} min, with "
           f"{short['sun_m'] - shaded['sun_m']:.0f} m less walking in the sun.")
+    direct = trip["direct"]
+    if direct:
+        names = "; ".join(b["name"] for b in direct["barriers"]) or "no barriers, but busier roads"
+        print(f"Direct way of a person without disabilities: {direct['stats']['length_m']:.0f} m, passes: {names}")
     print("Why A*: it finds the cheapest path like Dijkstra, but the distance heuristic makes it "
           "expand far fewer nodes.")
 
@@ -138,8 +149,12 @@ def main():
     # ------------------------------------------------------------ result + map
     chosen = routes[decision]["stats"]
     header("Recommendation")
-    print(f"Take the {decision.lower()} route: {chosen['length_m']:.0f} m, about {chosen['walk_min']:.0f} min, "
+    label = {"Shortest": "fastest", "Shaded": "most shade"}[decision]
+    lead = "SAYA picks the" if args.profile == "disabled" else "SAYA suggests the"
+    print(f"{lead} {label} route: {chosen['length_m']:.0f} m, about {chosen['walk_min']:.0f} min, "
           f"{chosen['sun_share']:.0%} in the sun, {c['HeatStressed']:.0%} chance of heat stress.")
+    if routes["Shortest"]["result"].edges == routes["Shaded"]["result"].edges:
+        print("There is no shadier way right now: the fastest route is also the shadiest.")
     if chosen["barriers"]:
         print("Warning, passes reported barriers: " + "; ".join(chosen["barriers"]))
     if not args.no_map:

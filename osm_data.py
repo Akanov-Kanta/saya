@@ -23,6 +23,8 @@ TREES_FILE = DATA_DIR / "trees.geojson"
 BARRIERS_FILE = DATA_DIR / "barriers.json"
 LANDMARKS_FILE = DATA_DIR / "landmarks.json"   # hand-set shapes OSM cannot express
 PLACES_FILE = DATA_DIR / "places.json"
+ENTRANCES_FILE = DATA_DIR / "entrances.geojson"
+FIXES_FILE = DATA_DIR / "map_fixes.json"         # hand-checked repairs of the OSM path network
 
 # The public Overpass server is often busy, so try mirrors in turn.
 OVERPASS_SERVERS = [
@@ -197,11 +199,45 @@ def download_area() -> None:
                              geometry=green.geometry[is_tree].values, crs=green.crs)
     trees.to_file(TREES_FILE, driver="GeoJSON")
 
+    print("Downloading building entrances...")
+    doors = _from_overpass(lambda: ox.features_from_point((lat, lon), tags={"entrance": True}, dist=reach))
+    doors = doors[doors.geometry.geom_type == "Point"]
+    gpd.GeoDataFrame({
+        "osm_id": [f"{i[0]}/{i[1]}" for i in doors.index],
+        "entrance": [first(v) for v in doors["entrance"]],
+        "ref": [first(v) if isinstance(first(v), str) else None for v in doors.get("ref", pd.Series(None, doors.index))],
+        "wheelchair": [first(v) if isinstance(first(v), str) else None
+                       for v in doors.get("wheelchair", pd.Series(None, doors.index))],
+    }, geometry=doors.geometry.values, crs=doors.crs).to_file(ENTRANCES_FILE, driver="GeoJSON")
+
     places = _named_places(pd.concat([features[features.get("building:part").isna()]
                                       if "building:part" in features else features,
                                       green[green.get("leisure").notna()] if "leisure" in green else green.iloc[:0]]))
     PLACES_FILE.write_text(json.dumps(places, ensure_ascii=False, indent=0))
     print(f"Saved {graph.number_of_nodes()} nodes, {len(buildings)} 3D pieces, {len(trees)} trees, {len(places)} places")
+
+
+def load_fixes() -> dict:
+    return json.loads(FIXES_FILE.read_text()) if FIXES_FILE.exists() else {}
+
+
+def load_entrances(fixes=None) -> gpd.GeoDataFrame:
+    """Building entrances from OSM, plus the ones data/map_fixes.json adds where OSM has none."""
+    columns = ["osm_id", "entrance", "ref", "wheelchair", "name", "building"]
+    entrances = gpd.read_file(ENTRANCES_FILE) if ENTRANCES_FILE.exists() else \
+        gpd.GeoDataFrame(columns=columns, geometry=[], crs="EPSG:4326")
+    added = (fixes if fixes is not None else load_fixes()).get("entrances", [])
+    if added:
+        extra = gpd.GeoDataFrame(
+            [{"osm_id": None, "entrance": e.get("entrance", "main"), "ref": None,
+              "wheelchair": e.get("wheelchair"), "name": e["name"],
+              "building": ",".join(e.get("building", []))} for e in added],
+            geometry=gpd.points_from_xy([e["lon"] for e in added], [e["lat"] for e in added]), crs="EPSG:4326")
+        entrances = pd.concat([entrances, extra], ignore_index=True)
+    for column in columns:
+        if column not in entrances:
+            entrances[column] = None
+    return entrances
 
 
 def load_area(refresh: bool = False):

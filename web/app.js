@@ -1,21 +1,28 @@
 // SAYA web app. The browser only draws: shadows, A*, Bayes and the MDP run in Python.
 import { Buildings3D } from './buildings3d.js';
 import { astanaDate, compass, sunPosition } from './sun.js';
-import { renderEmpty, renderLoading, renderNeedsWeather, renderResult } from './panel.js';
+import { BARRIER_ICON, LABEL, renderEmpty, renderLoading, renderNeedsWeather, renderResult } from './panel.js';
 
 const $ = (id) => document.getElementById(id);
 const PROFILES = [
-  { key: 'wheelchair', label: 'Wheelchair', icon: 'accessible' },
-  { key: 'elderly', label: 'Elderly', icon: 'elderly' },
-  { key: 'standard', label: 'Pedestrian', icon: 'directions_walk' },
+  { key: 'disabled', label: 'With disabilities', icon: 'accessible' },
+  { key: 'standard', label: 'Without disabilities', icon: 'directions_walk' },
 ];
-const QUICK = ['aitu', 'megasilkway', 'nuralem', 'nu', 'botanical'];
+const CHOICES = [
+  { key: 'Shortest', icon: 'bolt' },
+  { key: 'Shaded', icon: 'umbrella' },
+];
+const QUICK = ['qairu', 'megasilkway', 'nu', 'nuralem', 'botanical', 'aitu'];
 const COLOURS = { Shortest: '#e4572e', Shaded: '#1f5fbf' };
+const ACCESS = '#0e8a6a';   // the barrier-free route of a person with disabilities
 
 const state = {
-  meta: null, start: null, end: null, profile: 'wheelchair', date: '2026-07-15', minutes: 960,
-  feelsLike: null, trip: null, focus: null, playing: false, activeField: null, sun: null,
+  meta: null, start: null, end: null, profile: 'disabled', date: '2026-07-15', minutes: 960,
+  feelsLike: null, trip: null, choice: null, playing: false, activeField: null, sun: null,
 };
+// Person with disabilities: SAYA's decision. Otherwise: the person's choice, or SAYA's suggestion until they choose.
+const shownAction = (trip) => (trip.profile === 'disabled' ? trip.decision : state.choice || trip.decision);
+const barrierMarkers = {};
 const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
 async function api(path, options) {
@@ -79,6 +86,9 @@ function addLayers() {
   map.addLayer({ id: 'mask', type: 'fill', source: 'mask', paint: { 'fill-color': '#f3f1ec', 'fill-opacity': 0.62 } });
   map.addSource('area', { type: 'geojson', data: lineFeature(area) });
   map.addLayer({ id: 'area', type: 'line', source: 'area', paint: { 'line-color': '#7b8494', 'line-width': 1.5, 'line-dasharray': [3, 3] } });
+  map.addSource('direct', { type: 'geojson', data: empty });
+  map.addLayer({ id: 'direct', type: 'line', source: 'direct', layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: { 'line-color': '#6b7280', 'line-width': 4, 'line-opacity': 0.75, 'line-dasharray': [1.2, 1.2] } });
   for (const action of ['Shortest', 'Shaded']) {
     map.addSource(`route-${action}`, { type: 'geojson', data: empty });
     map.addLayer({ id: `casing-${action}`, type: 'line', source: `route-${action}`, layout: { 'line-join': 'round', 'line-cap': 'round' },
@@ -92,12 +102,28 @@ function addBarriers() {
   for (const barrier of state.meta.barriers) {
     const el = document.createElement('div');
     el.className = 'barrier-marker';
-    el.textContent = '!';
+    el.innerHTML = `<span class="ms">${BARRIER_ICON[barrier.type] || 'warning'}</span>`;
     el.setAttribute('aria-label', barrier.name);
-    el.addEventListener('mouseenter', () => showTooltip(el, `<b>${barrier.name}</b><span>Simulated resident report · ${barrier.type.replace('_', ' ')}</span>`));
+    const source = barrier.source === 'OpenStreetMap' ? 'Mapped in OpenStreetMap' : 'Simulated resident report';
+    el.addEventListener('mouseenter', () => showTooltip(el, `<b>${barrier.name}</b><span>${source} · impassable for a person with disabilities</span>`));
     el.addEventListener('mouseleave', hideTooltip);
     new maplibregl.Marker({ element: el }).setLngLat([barrier.lon, barrier.lat]).addTo(map);
+    barrierMarkers[barrier.id] = el;
   }
+  for (const fix of state.meta.map_fixes || []) {
+    const el = document.createElement('div');
+    el.className = 'fix-marker';
+    el.innerHTML = '<span class="ms">build</span>';
+    el.setAttribute('aria-label', 'Map fix');
+    el.addEventListener('mouseenter', () => showTooltip(el, `<b>Map fix: ${fix.length_m} m link added</b><span>${fix.note}</span><small>data/map_fixes.json</small>`));
+    el.addEventListener('mouseleave', hideTooltip);
+    new maplibregl.Marker({ element: el }).setLngLat([fix.lon, fix.lat]).addTo(map);
+  }
+}
+
+function markAvoided(barriers) {
+  const ids = new Set(barriers.map((b) => b.id));
+  for (const [id, el] of Object.entries(barrierMarkers)) el.classList.toggle('avoided', ids.has(Number(id)) || ids.has(id));
 }
 
 // ------------------------------------------------------------------ trip points
@@ -157,6 +183,8 @@ function clearRoute() {
   state.trip = null;
   renderSummary();
   for (const action of ['Shortest', 'Shaded']) map.getSource(`route-${action}`)?.setData(empty);
+  map.getSource('direct')?.setData(empty);
+  markAvoided([]);
 }
 
 function fitTrip() {
@@ -226,7 +254,7 @@ function setupSearch() {
     updateFields();
     refreshRoute();
   });
-  $('chips').innerHTML = QUICK.filter((k) => state.meta.places[k]).map((k) => `<button type="button" class="chip" data-place="${k}">${state.meta.places[k].name.replace(', the EXPO sphere', '')}</button>`).join('');
+  $('chips').innerHTML = QUICK.filter((k) => state.meta.places[k]).map((k) => `<button type="button" class="chip" data-place="${k}">${state.meta.places[k].name.split(',')[0]}</button>`).join('');
   $('chips').addEventListener('mousedown', (e) => { if (e.target.closest('[data-place]')) e.preventDefault(); });
   $('chips').addEventListener('click', (e) => {
     const chip = e.target.closest('[data-place]');
@@ -241,6 +269,17 @@ function setupSearch() {
 
 // ------------------------------------------------------------------ profile and time
 
+function updateChoice() {
+  const disabled = state.profile === 'disabled';
+  $('auto-note').hidden = !disabled;
+  $('choice-box').hidden = disabled;
+  const suggested = state.trip && state.trip.profile === 'standard' ? state.trip.decision : null;
+  const shown = state.choice || suggested;
+  $('choice').innerHTML = CHOICES.map((c) => `
+    <button type="button" role="radio" data-choice="${c.key}" aria-checked="${c.key === shown}" class="${c.key === shown ? 'on' : ''}">
+      <span class="ms">${c.icon}</span><span>${LABEL[c.key]}</span>${c.key === suggested ? '<em>SAYA suggests</em>' : ''}</button>`).join('');
+}
+
 function setupControls() {
   $('profiles').innerHTML = PROFILES.map((p) => `
     <button type="button" role="radio" data-profile="${p.key}" aria-checked="${p.key === state.profile}" class="${p.key === state.profile ? 'on' : ''}">
@@ -254,8 +293,17 @@ function setupControls() {
       b.classList.toggle('on', on);
       b.setAttribute('aria-checked', on);
     });
+    updateChoice();
     refreshRoute();
   });
+  $('choice').addEventListener('click', (e) => {
+    const button = e.target.closest('[data-choice]');
+    if (!button) return;
+    state.choice = button.dataset.choice;
+    updateChoice();
+    if (state.trip) { drawRoutes(); renderPanel(); }
+  });
+  updateChoice();
 
   $('date').value = state.date;
   $('date').addEventListener('change', () => {
@@ -436,37 +484,56 @@ async function refreshRoute() {
 
 function drawRoutes() {
   const trip = state.trip;
-  const highlight = state.focus || trip.decision;
+  const shown = shownAction(trip);
+  // One route on the map: the one SAYA picked, or the one the person chose.
+  const colour = trip.profile === 'disabled' ? ACCESS : COLOURS[shown];
   for (const action of ['Shortest', 'Shaded']) {
-    map.getSource(`route-${action}`).setData(lineFeature(trip.routes[action].coords));
-    const on = action === highlight;
-    map.setPaintProperty(`route-${action}`, 'line-width', on ? 7 : 4.5);
-    map.setPaintProperty(`route-${action}`, 'line-opacity', on ? 1 : 0.6);
-    map.setPaintProperty(`route-${action}`, 'line-dasharray', on ? [1, 0] : [1.4, 1.4]);
-    map.setPaintProperty(`casing-${action}`, 'line-width', on ? 11 : 7.5);
+    map.getSource(`route-${action}`).setData(action === shown ? lineFeature(trip.routes[action].coords) : empty);
   }
-  map.moveLayer(`casing-${highlight}`, 'buildings-3d');
-  map.moveLayer(`route-${highlight}`, 'buildings-3d');
+  map.setPaintProperty(`route-${shown}`, 'line-color', colour);
+  map.setPaintProperty(`ghost-${shown}`, 'line-color', colour);
+  map.moveLayer(`casing-${shown}`, 'buildings-3d');
+  map.moveLayer(`route-${shown}`, 'buildings-3d');
+  // For a person with disabilities, the direct way in grey shows what the route goes around.
+  const avoided = trip.profile === 'disabled' && trip.direct ? trip.direct.barriers : [];
+  map.getSource('direct').setData(avoided.length ? lineFeature(trip.direct.coords) : empty);
+  markAvoided(avoided);
+  // The pins move to the entrance the route really starts and ends at.
+  for (const [which, point] of [['start', trip.start_point], ['end', trip.end_point]]) {
+    markers[which]?.setLngLat(point.entrance ? [point.lon, point.lat] : [state[which].lon, state[which].lat]);
+    const input = $(which === 'start' ? 'from' : 'to');
+    if (document.activeElement !== input) {
+      input.value = entranceLabel(which, point);
+      input.scrollLeft = 0;   // show the start of a long name, not its end
+    }
+  }
+}
+
+function entranceLabel(which, point) {
+  const label = state[which].label;
+  if (!point.entrance) return label;
+  return point.entrance.includes(',') ? point.entrance : `${label} · ${point.entrance}`;
 }
 
 function renderSummary() {
   const trip = state.trip;
   const el = $('summary');
   if (!trip) { el.hidden = true; return; }
-  const best = trip.routes[trip.decision].stats;
-  el.className = `summary ${trip.decision.toLowerCase()}`;
-  el.innerHTML = `<span class="ms">${trip.decision === 'Shaded' ? 'umbrella' : 'bolt'}</span><b>${trip.decision} route</b><span>${best.walk_min.toFixed(0)} min · ${Math.round(best.sun_share * 100)}% sun · ${fmt(state.minutes)}</span><span class="ms">expand_more</span>`;
+  const shown = shownAction(trip);
+  const best = trip.routes[shown].stats;
+  const title = trip.profile === 'disabled' ? 'Barrier-free route' : `${LABEL[shown]} route`;
+  el.className = `summary ${trip.profile === 'disabled' ? 'access' : shown.toLowerCase()}`;
+  el.innerHTML = `<span class="ms">${trip.profile === 'disabled' ? 'accessible' : shown === 'Shaded' ? 'umbrella' : 'bolt'}</span><b>${title}</b><span>${best.walk_min.toFixed(0)} min · ${Math.round(best.sun_share * 100)}% sun · ${fmt(state.minutes)}</span><span class="ms">expand_more</span>`;
   el.hidden = false;
 }
 
 function renderPanel() {
   renderSummary();
-  $('result').innerHTML = renderResult(state.trip, { profile: state.profile, focus: state.focus, feelsLikeEdited: state.feelsLike !== null });
-  $('result').querySelectorAll('[data-route]').forEach((card) => card.addEventListener('click', () => {
-    state.focus = state.focus === card.dataset.route ? null : card.dataset.route;
-    drawRoutes();
-    renderPanel();
-  }));
+  updateChoice();
+  $('result').innerHTML = renderResult(state.trip, {
+    choice: shownAction(state.trip), feelsLikeEdited: state.feelsLike !== null,
+    names: { start: state.start.label, end: state.end.label },
+  });
   $('edit-feels')?.addEventListener('click', () => {
     if (state.feelsLike !== null) { state.feelsLike = null; refreshRoute(); return; }
     $('feels-edit').hidden = false;
@@ -488,8 +555,8 @@ function wireFeelsLike() {
 
 function wireEmpty() {
   $('demo-trip')?.addEventListener('click', () => {
-    const { aitu, megasilkway } = state.meta.places;
-    setPoint('start', aitu.lat, aitu.lon, aitu.name);
+    const { qairu, megasilkway } = state.meta.places;
+    setPoint('start', qairu.lat, qairu.lon, qairu.name);
     setPoint('end', megasilkway.lat, megasilkway.lon, megasilkway.name);
     fitTrip();
     refreshRoute();
@@ -558,6 +625,11 @@ async function start() {
   const [lat, lon] = meta.center;
   buildings3d = new Buildings3D(maplibregl, buildings, [lon, lat], trees);
   map.addLayer(buildings3d);
+  // Faint copies on top of the buildings, so a route behind a building stays visible.
+  for (const action of ['Shortest', 'Shaded']) {
+    map.addLayer({ id: `ghost-${action}`, type: 'line', source: `route-${action}`, layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': COLOURS[action], 'line-width': 4, 'line-opacity': 0.4, 'line-dasharray': [1, 1.6] } });
+  }
   addBarriers();
   updateClock();
   map.on('mousemove', onMouseMove);

@@ -12,9 +12,9 @@ MEGA = list(config.PLACES["megasilkway"][1:])
 
 def test_meta_lists_places_profiles_and_barriers():
     meta = client.get("/api/meta").json()
-    assert set(meta["profiles"]) == {"wheelchair", "elderly", "standard"}
-    assert "aitu" in meta["places"]
-    assert len(meta["barriers"]) == 2
+    assert meta["profiles"] == {"disabled": "Person with disabilities", "standard": "Person without disabilities"}
+    assert meta["defaults"]["start"] == "qairu" and "nu" in meta["places"]
+    assert len(meta["barriers"]) >= 5
 
 
 def test_shadows_move_with_the_time_of_day():
@@ -30,11 +30,15 @@ def test_night_has_no_sun():
     assert night["sun"]["is_night"]
 
 
-def test_route_for_points_picked_by_the_user():
+def test_route_for_points_picked_by_the_user_matches_the_cli_pipeline():
+    from datetime import datetime
+    import planner
+    from server import area
     body = {"start": AITU, "end": MEGA, "date": "2026-07-15", "time": "16:00",
-            "profile": "wheelchair", "feels_like": 31.0}
+            "profile": "disabled", "feels_like": 31.0}
     trip = client.post("/api/route", json=body).json()
-    assert trip["decision"] == "Shaded"
+    cli = planner.plan_trip(area, AITU, MEGA, datetime(2026, 7, 15, 16, 0, tzinfo=config.ASTANA_TZ), "disabled", 31.0)
+    assert trip["decision"] == cli["decision"]
     assert trip["bayes"]["posterior"] == 0.75
     assert len(trip["routes"]["Shaded"]["coords"]) > 10
     assert len(trip["mdp"]["rows"]) == 4
@@ -60,4 +64,43 @@ def test_trees_and_search_places():
     trees = client.get("/api/trees").json()
     assert trees["crown_radius_m"] == config.TREE_CROWN_RADIUS_M and len(trees["points"]) > 100
     names = [p["name"] for p in client.get("/api/meta").json()["search"]]
-    assert names[:2] == ["Astana IT University", "Mega Silk Way"] and len(names) > 20
+    assert names[0].startswith("QAIRU") and "Nazarbayev University" in names and len(names) > 20
+
+
+QAIRU = list(config.PLACES["qairu"][1:])
+NU = list(config.PLACES["nu"][1:])
+
+
+def trip(start, end, profile, time="16:00"):
+    body = {"start": start, "end": end, "date": "2026-07-15", "time": time, "profile": profile, "feels_like": 31.0}
+    return client.post("/api/route", json=body).json()
+
+
+def test_nazarbayev_university_is_reached_by_its_main_entrance():
+    # OSM breaks the crossing of Qabanbay Batyr Avenue into pieces; data/map_fixes.json joins them.
+    # Without that fix this walk was 3.8 km around the campus.
+    result = trip(QAIRU, NU, "standard")
+    assert result["end_point"]["entrance"] == "Nazarbayev University, main entrance"
+    assert result["routes"]["Shortest"]["stats"]["length_m"] < 1600
+
+
+def test_mega_silk_way_uses_the_entrance_facing_the_start():
+    result = trip(QAIRU, MEGA, "standard")
+    assert result["end_point"]["entrance"] == "main entrance E"     # the east side, towards QAIRU
+
+
+def test_person_with_disabilities_goes_around_barriers():
+    disabled, standard = trip(QAIRU, MEGA, "disabled"), trip(QAIRU, MEGA, "standard")
+    names = [b["name"] for b in disabled["direct"]["barriers"]]
+    assert "Broken kerb ramp at the crossing to Mega Silk Way" in names           # on the direct way
+    assert disabled["routes"]["Shortest"]["barriers"] == []                        # not on theirs
+    assert disabled["routes"]["Shortest"]["coords"] != standard["routes"]["Shortest"]["coords"]
+    assert disabled["direct"]["coords"] == standard["routes"]["Shortest"]["coords"]
+    assert standard["direct"] is None
+
+
+def test_without_disabilities_both_options_come_back():
+    result = trip(QAIRU, NU, "standard", time="18:00")
+    shortest, shaded = result["routes"]["Shortest"]["stats"], result["routes"]["Shaded"]["stats"]
+    assert not result["same_route"] and shaded["sun_share"] < shortest["sun_share"]
+    assert result["decision"] in {"Shortest", "Shaded"}                           # SAYA's suggestion

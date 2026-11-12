@@ -54,5 +54,57 @@
   "2026-07-15T12:00Z@51.0909,71.4184": {
     "feels_like": 28.0,
     "source": "Open-Meteo archive: air 32.1 degC, feels like 28.0 degC"
+  },
+  "2026-07-15T01:00Z@51.0909,71.4184": {
+    "feels_like": 22.6,
+    "source": "Open-Meteo archive: air 24.3 degC, feels like 22.6 degC"
+  },
+  "2026-07-15T05:00Z@51.0893,71.4172": {
+    "feels_like": 31.2,
+    "source": "Open-Meteo archive: air 30.1 degC, feels like 31.2 degC"
+  },
+  "2026-07-15T06:00Z@51.0893,71.4172": {
+    "feels_like": 34.5,
+    "source": "Open-Meteo archive: air 33.1 degC, feels like 34.5 degC"
+  },
+  "2026-07-15T07:00Z@51.0893,71.4172": {
+    "feels_like": 34.8,
+    "source": "Open-Meteo archive: air 34.2 degC, feels like 34.8 degC"
+  },
+  "2026-07-15T08:00Z@51.0893,71.4172": {
+    "feels_like": 30.5,
+    "source": "Open-Meteo archive: air 31.5 degC, feels like 30.5 degC"
+  },
+  "2026-07-15T09:00Z@51.0893,71.4172": {
+    "feels_like": 31.2,
+    "source": "Open-Meteo archive: air 33.2 degC, feels like 31.2 degC"
+  },
+  "2026-07-15T10:00Z@51.0893,71.4172": {
+    "feels_like": 30.7,
+    "source": "Open-Meteo archive: air 32.6 degC, feels like 30.7 degC"
+  },
+  "2026-07-15T12:00Z@51.0893,71.4172": {
+    "feels_like": 28.0,
+    "source": "Open-Meteo archive: air 32.1 degC, feels like 28.0 degC"
+  },
+  "2026-07-15T14:00Z@51.0893,71.4172": {
+    "feels_like": 26.8,
+    "source": "Open-Meteo archive: air 29.2 degC, feels like 26.8 degC"
+  },
+  "2026-07-15T01:00Z@51.0893,71.4172": {
+    "feels_like": 22.6,
+    "source": "Open-Meteo archive: air 24.3 degC, feels like 22.6 degC"
+  },
+  "2026-07-15T02:00Z@51.0893,71.4172": {
+    "feels_like": 23.7,
+    "source": "Open-Meteo archive: air 25.7 degC, feels like 23.7 degC"
+  },
+  "2026-07-15T03:00Z@51.0893,71.4172": {
+    "feels_like": 25.8,
+    "source": "Open-Meteo archive: air 27.2 degC, feels like 25.8 degC"
+  },
+  "2026-07-15T04:00Z@51.0893,71.4172": {
+    "feels_like": 28.1,
+    "source": "Open-Meteo archive: air 28.5 degC, feels like 28.1 degC"
   }
 }

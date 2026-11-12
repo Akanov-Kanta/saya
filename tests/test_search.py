@@ -7,7 +7,7 @@ import pytest
 import config
 from search import astar, make_edge_cost, route_stats
 
-WHEELCHAIR = config.PROFILES["wheelchair"]
+WHEELCHAIR = config.PROFILES["disabled"]   # a person with disabilities (wheelchair)
 STANDARD = config.PROFILES["standard"]
 
 
