@@ -1,0 +1,5 @@
+# look sheets written by the hairline-create skill's look.mjs, and the artifact copy of the page
+hairline-*.png
+index.artifact.html
+.vercel
+.env*

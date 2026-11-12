@@ -1,0 +1,3 @@
+# Vercel uploads only the built page; everything else here is source for build.mjs
+/*
+!/index.html

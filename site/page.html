@@ -1,0 +1,489 @@
+<title>SAYA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%2316191c' stroke-width='2.5'/%3E%3Cpath d='M16 5a11 11 0 0 1 0 22z' fill='%2316191c'/%3E%3C/svg%3E">
+<meta name="description" content="SAYA finds accessible walking routes in Astana, measures how much of each is in the sun, and decides whether the shaded detour is worth it today. A* search, Bayesian inference and an MDP.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a field notebook. One reading column; the figure plates sit beside the text they explain,
+     and the three algorithms run as a numbered sequence because each one feeds the next. */
+  :root {
+    --bg: #f2f5f5;        /* cool paper */
+    --plate: #ffffff;     /* the figures' ground */
+    --ink: #16191c;
+    --muted: #5b626a;
+    --line: #d9e0e2;
+    --accent: #0a6c82;    /* steppe sky, darkened for text */
+    --sun: #9a6200;       /* the flag's sun, darkened for text */
+    --display: "Unbounded", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --step--1: 0.8125rem; --step-0: 1rem; --step-1: 1.1875rem; --step-2: 1.5rem; --step-3: clamp(1.75rem, 1.3rem + 1.6vw, 2.375rem);
+    --step-hero: clamp(3.5rem, 2rem + 7vw, 7rem);
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0f10; --plate: #08090a; --ink: #dfe4e9; --muted: #8e959d; --line: #222a2c;
+      --accent: #4cc4dc; --sun: #e8b43a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0f10; --plate: #08090a; --ink: #dfe4e9; --muted: #8e959d; --line: #222a2c;
+    --accent: #4cc4dc; --sun: #e8b43a; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: var(--step-0)/1.6 var(--body); -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    width: 100%; max-width: 1120px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 500; line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font-size: var(--step-3); }
+  h3 { font-size: var(--step-2); }
+  p { margin: 0; text-wrap: pretty; }
+  .mono, code, pre, .tag, output, .eyebrow, th { font-family: var(--mono); }
+  code { font-size: 0.875em; }
+  .eyebrow { font-size: var(--step--1); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .muted { color: var(--muted); }
+  .sun { color: var(--sun); }
+  .shade { color: var(--accent); }
+  section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--line); }
+  /* every two-part row is one column on a phone; its parts may shrink, so a wide table scrolls in place */
+  .hero, .trip, .step, .app, .two { grid-template-columns: minmax(0, 1fr); }
+  .hero > *, .trip > *, .step > *, .app > *, .two > * { min-width: 0; }
+  .prose { display: grid; gap: 16px; max-width: 62ch; align-content: start; }
+
+  /* top bar */
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; padding-block: 20px; }
+  .bar .mark { font-family: var(--display); font-weight: 600; letter-spacing: 0.04em; text-decoration: none; color: var(--ink); }
+  .bar nav { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--step--1); }
+  .bar nav a { color: var(--muted); text-decoration: none; }
+  .bar nav a:hover { color: var(--ink); }
+
+  /* hero */
+  .hero { display: grid; gap: 40px; align-items: center; padding-block: clamp(24px, 5vw, 64px) clamp(56px, 8vw, 96px); }
+  @media (min-width: 920px) { .hero { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+  .hero h1 { font-size: var(--step-hero); font-weight: 600; letter-spacing: 0.02em; line-height: 0.95; }
+  .hero .gloss { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); margin-top: 14px; }
+  .hero .gloss b { font-weight: 500; color: var(--ink); }
+  .hero .lead { font-size: var(--step-1); line-height: 1.55; margin-top: 28px; max-width: 34ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 500; font-size: 0.9375rem; background: var(--plate);
+  }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* a figure plate, as the Hairline bench draws it */
+  .fig { margin: 0; display: grid; gap: 12px; min-width: 0; }
+  .plate { position: relative; background: var(--plate); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; max-width: 100%; }
+  .stage { --hairline-plate: var(--plate); max-width: 100%; }
+  .tag { position: absolute; top: 12px; z-index: 1; font-size: 11px; letter-spacing: 0.02em; pointer-events: none; }
+  .tag.name { left: 14px; color: var(--muted); }
+  .tag.read { right: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 12px; }
+  .controls label { font-family: var(--mono); color: var(--muted); }
+  .controls output { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    flex: 1 1 110px; min-width: 0; height: 32px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 1px; background: var(--muted); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -6.5px; border-radius: 50%; border: 1px solid var(--ink); background: var(--plate); }
+  input[type="range"]::-moz-range-track { height: 1px; background: var(--muted); }
+  input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--ink); background: var(--plate); }
+  .play {
+    height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink);
+    font: 11px/1 var(--mono); letter-spacing: 0.02em; cursor: pointer;
+  }
+  .play[aria-pressed="true"] { background: var(--ink); color: var(--plate); border-color: var(--ink); }
+  figcaption { font-size: var(--step--1); color: var(--muted); max-width: 60ch; }
+
+  /* the trip */
+  .trip { display: grid; gap: 40px; }
+  @media (min-width: 920px) { .trip { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: end; } }
+  .scroll { overflow-x: auto; min-width: 0; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  th:first-child, td:first-child { text-align: left; padding-left: 0; }
+  td.big { font-family: var(--display); font-size: var(--step-1); }
+  tr.win td:first-child::after { content: "recommended"; margin-left: 10px; font: 500 10px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); vertical-align: 2px; }
+  .verdict { margin-top: 20px; font-size: var(--step-1); max-width: 46ch; }
+
+  /* the three steps */
+  .steps-head { display: grid; gap: 16px; max-width: 62ch; margin-bottom: clamp(40px, 6vw, 72px); }
+  .flow { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 12px/1.4 var(--mono); color: var(--muted); }
+  .flow b { font-weight: 500; color: var(--ink); }
+  .step { display: grid; gap: 32px; padding-block: clamp(32px, 5vw, 56px); border-top: 1px dashed var(--line); }
+  .step:first-of-type { border-top: 0; padding-top: 0; }
+  @media (min-width: 920px) { .step { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: start; } }
+  .step .num { font: 500 var(--step--1)/1 var(--mono); color: var(--accent); letter-spacing: 0.06em; }
+  .step .copy { display: grid; gap: 16px; min-width: 0; }
+  .step .copy h3 { margin-top: 4px; }
+  .io { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; font-size: var(--step--1); margin: 0; }
+  .io dt { font-family: var(--mono); color: var(--muted); }
+  .io dd { margin: 0; }
+  pre {
+    margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--plate);
+    font-size: 12.5px; line-height: 1.6; overflow-x: auto; white-space: pre;
+  }
+  .lik th, .lik td { padding: 8px 10px; }
+  .lik td.on { color: var(--ink); font-weight: 500; }
+
+  /* the app */
+  .app { display: grid; gap: 40px; }
+  @media (min-width: 920px) { .app { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; } }
+  .shot { margin: 0; display: grid; gap: 10px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--line); }
+  .features { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  .features li { display: grid; gap: 2px; }
+  .features b { font-weight: 600; }
+
+  /* runs, assumptions */
+  .two { display: grid; gap: 40px; }
+  @media (min-width: 920px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; } }
+  .runs td:last-child, .runs th:last-child { text-align: left; white-space: normal; min-width: 24ch; padding-left: 24px; }
+  .runs td code { white-space: nowrap; }
+  .list { margin: 0; padding-left: 1.1em; display: grid; gap: 10px; }
+
+  /* run it */
+  .cmds { display: grid; gap: 10px; max-width: 760px; }
+  .cmd { display: flex; align-items: stretch; gap: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--plate); overflow: hidden; min-width: 0; }
+  .cmd code { flex: 1; min-width: 0; padding: 12px 14px; font-size: 13px; white-space: nowrap; overflow-x: auto; }
+  .cmd .hint { color: var(--muted); }
+  .cmd button {
+    flex: none; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--muted); padding: 0 14px;
+    font: 11px/1 var(--mono); letter-spacing: 0.04em; cursor: pointer;
+  }
+  .cmd button:hover { color: var(--ink); }
+
+  footer { border-top: 1px solid var(--line); padding-block: 40px 56px; font-size: var(--step--1); color: var(--muted); }
+  footer .cols { display: grid; gap: 24px; }
+  @media (min-width: 760px) { footer .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  footer p + p { margin-top: 6px; }
+
+  @media (max-width: 520px) {
+    pre { font-size: 10.5px; padding: 12px; }
+    .lik th, .lik td { padding: 8px 5px; }
+    .lik th { font-size: 10px; letter-spacing: 0.02em; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<!--BODY-->
+<div class="wrap">
+  <header class="bar">
+    <a class="mark" href="#top">SAYA</a>
+    <nav aria-label="Sections">
+      <a href="#trip">The trip</a>
+      <a href="#how">How it decides</a>
+      <a href="#app">The map</a>
+      <a href="#run">Run it</a>
+      <a href="https://github.com/Akanov-Kanta/saya">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">AI Fundamentals · final project · Astana</p>
+        <h1 style="margin-top:18px">SAYA</h1>
+        <p class="gloss"><b>сая</b>: Kazakh for shade, as in <b>саябақ</b>, a park</p>
+        <p class="lead">A route planner for wheelchair users and elderly pedestrians in Astana's hot summers. It finds a path they can actually get through, works out how much of it is in the sun, and decides whether the shadier detour is worth it today.</p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/Akanov-Kanta/saya">View the code</a>
+          <a class="btn" href="https://colab.research.google.com/github/Akanov-Kanta/saya/blob/main/SAYA_algorithms.ipynb">Open the notebook in Colab</a>
+        </div>
+      </div>
+      <figure class="fig" data-figure="shade">
+        <div class="plate">
+          <span class="tag name">15 July · Astana</span><span class="tag read" aria-live="polite">rest</span>
+          <div class="stage"></div>
+        </div>
+        <div class="controls">
+          <label for="r-shade">building height</label>
+          <input id="r-shade" type="range" min="0" max="1" step="0.01" value="0.5">
+          <output for="r-shade">×1</output>
+          <button class="play" type="button" aria-pressed="false">play</button>
+        </div>
+        <figcaption>Move your pointer around the block: it is the sun. The hour comes from the sun's real path over Astana on 15 July, and each shadow is height ÷ tan(sun altitude) long, cast away from the sun. Stretches of street in shade take the bright line. SAYA does the same for the 1034 OpenStreetMap buildings of the EXPO district, domes and the Nur Alem sphere included.</figcaption>
+      </figure>
+    </div>
+
+    <section id="trip">
+      <div class="trip">
+        <div class="prose">
+          <p class="eyebrow">The trip</p>
+          <h2>The shortest way is not always the one to take</h2>
+          <p>A wheelchair user rolls from Astana IT University to Mega Silk Way on 15 July at 16:00. The feels-like temperature is 31&nbsp;°C. Two resident reports, a broken kerb ramp and steps without a ramp, close parts of the network (both simulated for the demo), so A* has to route around them.</p>
+          <p class="muted">Sample run of <code>python main.py</code>, with the weather reading cached in the repo.</p>
+        </div>
+        <div>
+          <div class="scroll">
+            <table>
+              <thead><tr><th>Route</th><th>Length</th><th>In sun</th><th>Minutes</th><th>Minutes in sun</th></tr></thead>
+              <tbody>
+                <tr><td>Shortest</td><td class="big">1560 m</td><td class="big sun">100%</td><td class="big">28.9</td><td class="big sun">28.9</td></tr>
+                <tr class="win"><td>Shaded</td><td class="big">1630 m</td><td class="big shade">81%</td><td class="big">30.2</td><td class="big shade">24.5</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="verdict">The shaded route costs 70&nbsp;m and 1.3&nbsp;minutes more and saves 236&nbsp;m of rolling in direct sun. Today that is worth it, so SAYA recommends it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="steps-head">
+        <p class="eyebrow">How it decides</p>
+        <h2>Three course algorithms, each feeding the next</h2>
+        <p>A* produces two routes. Bayes turns a noisy forecast into the chance of dangerous heat. The MDP weighs both and picks one. The figures below run the same rules on small examples; drag across them, or press play.</p>
+        <p class="flow" aria-label="Pipeline"><b>OSM + shade</b> → <b>1 · A*</b> two routes → <b>2 · Bayes</b> P(dangerous heat) → <b>3 · MDP</b> shortest or shaded</p>
+      </div>
+
+      <article class="step" id="astar">
+        <figure class="fig" data-figure="plaza">
+          <div class="plate">
+            <span class="tag name">plaza</span><span class="tag read" aria-live="polite">rest</span>
+            <div class="stage"></div>
+          </div>
+          <div class="controls">
+            <label for="r-plaza">sun weight w</label>
+            <input id="r-plaza" type="range" min="0" max="1" step="0.01" value="0.5">
+            <output for="r-plaza">3</output>
+            <button class="play" type="button" aria-pressed="false">play</button>
+          </div>
+          <figcaption>Point at a paving stone to make it the destination; A* starts from the dotted stone at the left corner. Stones in the buildings' shade sit lower and carry a dot. At w = 0 the route takes the sun; raise w and it bends through the shade. The read-out is the goal stone and the route length in steps.</figcaption>
+        </figure>
+        <div class="copy">
+          <p class="num">1 · Search</p>
+          <h3>A* finds two routes the walker can pass</h3>
+          <p>Every edge of the real OpenStreetMap walk network gets a cost. Steps and broken ramps are impassable for a wheelchair; busy roads, paving stones and crossings without a light cost extra. Sun on the edge costs extra too, scaled by the weight w.</p>
+          <pre>cost = length × access penalty
+     × (1 + w × sun_fraction) + crossing penalty</pre>
+          <p>With w = 0 A* returns the shortest accessible route; with w = 3 a metre in the sun counts as four, and it returns the shaded one. The heuristic is the straight-line distance to the goal. No edge costs less than its own length, so the heuristic never overestimates and A* stays optimal.</p>
+          <dl class="io">
+            <dt>input</dt><dd>5125 walk nodes, 15020 edges, shade measured on each</dd>
+            <dt>output</dt><dd>two paths with length, share in sun and minutes</dd>
+            <dt>cost</dt><dd>878 nodes expanded, against 1988 for Dijkstra</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="step" id="bayes">
+        <figure class="fig" data-figure="sieve">
+          <div class="plate">
+            <span class="tag name">sieve</span><span class="tag read" aria-live="polite">rest</span>
+            <div class="stage"></div>
+          </div>
+          <div class="controls">
+            <label for="r-sieve">prior P(dangerous)</label>
+            <input id="r-sieve" type="range" min="0" max="1" step="0.01" value="0.5">
+            <output for="r-sieve">0.30</output>
+            <button class="play" type="button" aria-pressed="false">play</button>
+          </div>
+          <figcaption>Each bead is a past July afternoon; the 30 darker ones were dangerously hot. A bead's size is the forecast it gave: small cool, medium warm, large hot. Point at one of the three holes and the beads that fit fall into the lower tray. The darker share of that tray is the posterior: 21 of 28 for hot.</figcaption>
+        </figure>
+        <div class="copy">
+          <p class="num">2 · Inference</p>
+          <h3>Bayes asks whether it is dangerously hot right now</h3>
+          <p>The true state, Dangerous or Safe, is hidden. SAYA sees one noisy sensor: the Open-Meteo feels-like temperature, put in a bucket. The prior comes from the month: 0.30 for July.</p>
+          <div class="scroll">
+            <table class="lik">
+              <thead><tr><th>P(reading | state)</th><th>cool &lt;24 °C</th><th>warm</th><th>hot ≥30 °C</th></tr></thead>
+              <tbody>
+                <tr><td>Dangerous</td><td>0.05</td><td>0.25</td><td class="on">0.70</td></tr>
+                <tr><td>Safe</td><td>0.55</td><td>0.35</td><td class="on">0.10</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <pre>P(Dangerous | hot) = 0.70 · 0.30
+                   / (0.70 · 0.30 + 0.10 · 0.70)
+                   = 0.21 / 0.28 = 0.75</pre>
+          <dl class="io">
+            <dt>input</dt><dd>prior 0.30 and a reading of 31.0 °C feels-like, so "hot"</dd>
+            <dt>output</dt><dd>P(dangerous heat) = 0.75</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="step" id="mdp">
+        <figure class="fig" data-figure="fork">
+          <div class="plate">
+            <span class="tag name">fork</span><span class="tag read" aria-live="polite">rest</span>
+            <div class="stage"></div>
+          </div>
+          <div class="controls">
+            <label for="r-fork">heat-stress penalty</label>
+            <input id="r-fork" type="range" min="0" max="1" step="0.01" value="0.5">
+            <output for="r-fork">60</output>
+            <button class="play" type="button" aria-pressed="false">play</button>
+          </div>
+          <figcaption>Move from left to right to raise the chance of dangerous heat; the sunny lane's paving stones swell with it. Past the break-even point the switch swings into the lane under the arcade, and the chosen lane's kerb is lit. The penalty moves that point: 0.42 at 45, 0.25 at 60, 0.08 at 90.</figcaption>
+        </figure>
+        <div class="copy">
+          <p class="num">3 · Decision</p>
+          <h3>An MDP picks the route</h3>
+          <p>The walker is Comfortable or HeatStressed; the actions are the two A* routes. Each minute in direct sun is a small chance of heat stress: 3% when the heat is dangerous, 0.2% when it is safe, times the walker's vulnerability (1.5 for a wheelchair user), averaged over the Bayes belief. The reward is minus the walking minutes, and ending heat-stressed costs 60.</p>
+          <pre>Q(s, a) = R(s, a) + γ · Σ P(s' | s, a) · V₀(s')
+γ = 0.9, V₀(Comfortable) = 0, V₀(HeatStressed) = −60</pre>
+          <dl class="io">
+            <dt>Shortest</dt><dd><span class="mono">Q = −59.80</span></dd>
+            <dt>Shaded</dt><dd><span class="mono">Q = −58.54</span>, the higher, so take the shaded route</dd>
+          </dl>
+          <p class="muted">One Bellman update, then argmax over Q(Comfortable, a).</p>
+        </div>
+      </article>
+    </section>
+
+    <section id="app">
+      <div class="app">
+        <figure class="shot">
+          <img src="{{SHOT}}" width="800" height="600" alt="The SAYA web app: 3D buildings of the EXPO district with the Nur Alem sphere, a trip from Astana IT University to Mega Silk Way with the recommended shaded route in blue and the shortest route dashed in red, and the planner panel with the profile, the time of day and the decision">
+          <figcaption class="muted">The web app: Astana IT University to Mega Silk Way, past the Nur Alem sphere.</figcaption>
+        </figure>
+        <div class="prose">
+          <p class="eyebrow">The map</p>
+          <h2>Plan your own trip on a 3D map</h2>
+          <ul class="features">
+            <li><b>Buildings drawn from the shadow model.</b> <span>Every OSM building and building part stands at its real height, on columns where it has them, with its flat, dome or pyramid roof. Hover one to see its height and where that number comes from.</span></li>
+            <li><b>Any time of day.</b> <span>Drag the timeline from 05:00 to 22:00 or press play. The shade on the ground turns and stretches, and the route is recomputed. After sunset the windows light up.</span></li>
+            <li><b>Your own trip.</b> <span>Search a place by name, tap a quick pick, or click the map, then drag either marker.</span></li>
+            <li><b>Who walks.</b> <span>Wheelchair user, elderly pedestrian or pedestrian without mobility needs. Barriers, speed and heat vulnerability change with the choice.</span></li>
+            <li><b>The decision first, then the reasons.</b> <span>One card says which route to take and why. "How SAYA decided" opens the A* table, the Bayes calculation and the MDP Q-table, the same numbers the console prints.</span></li>
+          </ul>
+          <p class="muted">The browser only draws. Shadows, A*, Bayes and the MDP all run in Python behind FastAPI; the map is MapLibre GL on free OpenFreeMap tiles, with three.js for the buildings. On a phone the planner becomes a bottom sheet.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="answers">
+      <div class="prose" style="margin-bottom:28px">
+        <p class="eyebrow">Same trip, different answers</p>
+        <h2>The decision moves with the inputs</h2>
+      </div>
+          <div class="scroll">
+            <table class="runs">
+              <thead><tr><th>Run</th><th>Reading</th><th>P(danger)</th><th>Decision</th></tr></thead>
+              <tbody>
+                <tr><td><code>python main.py</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Shaded</b></td></tr>
+                <tr><td><code>--date 2026-08-20</code></td><td>17.6 °C cool</td><td>3%</td><td><b>Shortest</b></td></tr>
+                <tr><td><code>--profile standard</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Shaded</b>, only just (Q −32.3 vs −32.7): a faster, less vulnerable walker gains little</td></tr>
+                <tr><td><code>--profile elderly --time 18:00</code></td><td>27.5 °C warm</td><td>23%</td><td><b>Shortest</b>: shade saves 6 sun-minutes but costs 5</td></tr>
+              </tbody>
+            </table>
+          </div>
+    </section>
+
+    <section id="assumptions">
+      <div class="two">
+        <div class="prose">
+          <p class="eyebrow">Assumptions</p>
+          <h2>What is measured and what is assumed</h2>
+          <p class="muted">Every number lives in <code>config.py</code> and is a labelled assumption, not a measurement. Change one and rerun <code>main.py</code> to see the effect.</p>
+        </div>
+          <ul class="list">
+            <li>Building heights come from the OSM <code>height</code> tag (14 pieces) or from levels × 3.2&nbsp;m (469). The other 551 use a default: 9&nbsp;m, or less for small types such as garages and sheds.</li>
+            <li>Building parts follow OSM's Simple 3D Buildings scheme, each with its own base height and roof. The Nur Alem sphere is set to a sphere by hand in <code>data/landmarks.json</code>.</li>
+            <li>Trees come from OSM: 34 single trees, 66 tree rows and 25 woods. Parks probably have more trees than are mapped, so real shade is likely higher than computed.</li>
+            <li>The barrier reports in <code>data/barriers.json</code> are simulated for the demo. OSM has no kerb, step or incline data for this area.</li>
+            <li>The monthly priors, the likelihood table, the heat-stress rates, the vulnerability multipliers and the −60 penalty are illustrative values. Shadows come from buildings and trees only; terrain, awnings and bus shelters are ignored.</li>
+          </ul>
+      </div>
+    </section>
+
+    <section id="run">
+      <div class="prose" style="margin-bottom:28px">
+        <p class="eyebrow">Run it</p>
+        <h2>Two minutes on a laptop, offline</h2>
+        <p>Python 3.10 or newer. The map data and the weather readings are saved in the repo, so the demo runs without a network.</p>
+      </div>
+      <div class="cmds">
+        <div class="cmd"><code>git clone https://github.com/Akanov-Kanta/saya &amp;&amp; cd saya</code><button type="button">copy</button></div>
+        <div class="cmd"><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate &amp;&amp; pip install -r requirements.txt</code><button type="button">copy</button></div>
+        <div class="cmd"><code>python server.py <span class="hint"># 3D map at http://127.0.0.1:8765</span></code><button type="button">copy</button></div>
+        <div class="cmd"><code>python main.py <span class="hint"># console version, every step printed</span></code><button type="button">copy</button></div>
+        <div class="cmd"><code>python -m pytest <span class="hint"># 26 tests</span></code><button type="button">copy</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <p><b style="color:var(--ink);font-family:var(--display);font-weight:600">SAYA</b> · AI Fundamentals final project · Python, OSMnx, FastAPI, MapLibre GL, three.js</p>
+      <p>Source: <a href="https://github.com/Akanov-Kanta/saya">github.com/Akanov-Kanta/saya</a></p>
+    </div>
+    <div>
+      <p>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ODbL. Basemap by <a href="https://openfreemap.org">OpenFreeMap</a>. Weather by <a href="https://open-meteo.com">Open-Meteo</a>, CC BY 4.0.</p>
+      <p>Figures drawn with <a href="https://github.com/lucasmarkes/hairline">Hairline</a> by Lucas Marques, MIT.</p>
+    </div>
+  </div>
+</footer>
+
+<!--KERNEL-->
+<script>
+/* The host: what the Hairline bench does for one figure, done here for each plate on the page. */
+(() => {
+  const FORMAT = {
+    shade: (v) => "×" + v.toFixed(1),
+    plaza: (v) => String(Math.round(v * 10) / 10),
+    sieve: (v) => v.toFixed(2),
+    fork: (v) => String(Math.round(v)),
+  };
+  const at = ([lo, mid, hi], i) => Math.round((i <= 0.5 ? lo + (i / 0.5) * (mid - lo) : mid + ((i - 0.5) / 0.5) * (hi - mid)) * 1000) / 1000;
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  HL.inject(document);
+  window.hairline = (figure) => {
+    const slot = document.querySelector('[data-figure="' + figure.name + '"]');
+    if (!slot) return;
+    const stage = slot.querySelector(".stage"), out = slot.querySelector(".read");
+    const slider = slot.querySelector('input[type="range"]'), shown = slot.querySelector("output"), play = slot.querySelector(".play");
+    stage.setAttribute("data-hairline", figure.name);
+    stage.setAttribute("role", "img");
+    stage.setAttribute("aria-label", figure.means);
+    const svg = HL.mk("svg", { viewBox: "0 0 400 320", "aria-hidden": "true" }, stage);
+    let text = null;
+    const read = {
+      get textContent() { return text; },
+      set textContent(v) { text = v == null ? "" : String(v); out.textContent = text; },
+    };
+    const value = () => at(figure.range, Number(slider.value));
+    const fmt = FORMAT[figure.name] || String;
+    const handle = figure.mount({ stage, svg, read }, value());
+    if (text === null) read.textContent = "rest";
+    shown.textContent = fmt(value());
+    slider.addEventListener("input", () => { shown.textContent = fmt(value()); handle.set(value()); });
+    let lap = null;
+    const set = (on) => {
+      if (on && !lap) lap = HL.tour(stage, figure.tour || HL.LAP);
+      if (!on && lap) { lap.stop(); lap = null; }
+      play.setAttribute("aria-pressed", String(on));
+      play.textContent = on ? "pause" : "play";
+    };
+    play.addEventListener("click", () => set(!lap));
+    if (!calm) set(true);
+  };
+
+  for (const btn of document.querySelectorAll(".cmd button")) {
+    btn.addEventListener("click", () => {
+      const code = btn.previousElementSibling, hint = code.querySelector(".hint");
+      const text = code.textContent.replace(hint ? hint.textContent : "", "").trim();
+      const done = () => { btn.textContent = "copied"; setTimeout(() => { btn.textContent = "copy"; }, 1600); };
+      const pick = () => { const r = document.createRange(); r.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "selected"; };
+      try { navigator.clipboard.writeText(text).then(done, pick); } catch { pick(); }
+    });
+  }
+})();
+</script>
+<!--FIGURES-->
