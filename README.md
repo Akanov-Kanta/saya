@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/logo/final/lockups/saya-horizontal-on-dark.svg">
+    <img src="brand/logo/final/lockups/saya-horizontal.svg" alt="SAYA logo: a route walks into the shade of a tree's crown" width="300">
+  </picture>
+</p>
+
 # SAYA: accessible, shade-aware walking routes
 
 **A route planner for Astana's hot summers. A person with disabilities gets one barrier-free route to the door, with SAYA itself deciding whether a shadier detour is worth it today. A person without disabilities picks the fastest or the shadiest route, and SAYA suggests one.**

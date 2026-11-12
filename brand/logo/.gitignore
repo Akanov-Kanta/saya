@@ -1,0 +1,5 @@
+# working files: renders, exploration rounds and test sheets
+renders/
+concepts/
+preview-*.html
+__pycache__/

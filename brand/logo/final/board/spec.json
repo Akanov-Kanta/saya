@@ -1,0 +1,41 @@
+{
+  "brand": "SAYA",
+  "tagline": "Accessible walking routes that find the shade",
+  "deck_title": "final identity",
+  "brief": "A route planner for Astana's hot summers. A person with disabilities gets one barrier-free route to the door; SAYA decides with A*, Bayes and an MDP whether a shadier detour is worth it today. Сая is Kazakh for shade.",
+  "adjectives": ["calm", "protective", "precise", "cool", "local"],
+  "criteria": "Success: says shade at a glance, distinct from the green and red of map apps, recognisable at 16 px, works in one colour and reversed, matches the landing page.",
+  "mockups": ["readme", "website", "app-icon", "favicon-tab", "signage", "social"],
+  "nav": ["How it works", "Algorithms", "Run it"],
+  "brand_color": "#0A6C82",
+  "tile_color": "#0A6C82",
+  "greyscale": false,
+  "final": true,
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Into the shade",
+      "symbol": "../symbol/saya-symbol.svg",
+      "lockup": "../lockups/saya-horizontal.svg",
+      "stacked": "../lockups/saya-stacked.svg",
+      "avatar": "../symbol/saya-symbol-small.svg",
+      "symbol_on_tile": "../symbol/saya-symbol-reversed.svg",
+      "symbol_on_dark": "../export/symbol/saya-symbol-mono-4cc4dc.svg",
+      "lockup_on_dark": "../lockups/saya-horizontal-on-dark.svg",
+      "stacked_on_dark": "../lockups/saya-stacked-on-dark.svg",
+      "idea": "A route walks into the shade of a crown and turns light there.",
+      "rationale": [
+        "Says the name: Сая is shade, as in саябақ, park",
+        "The route is cut out of the shade: a real hole, so it survives one colour, reversed and 16 px",
+        "Steppe-sky teal from the landing page, apart from the green and red of map apps",
+        "Monoline wordmark with round ends and no sharp corners: barrier-free letters"
+      ]
+    }
+  ],
+  "recommendation": "Use the horizontal lockup in headers, the symbol alone for icons and avatars, and the small cut below 48 px.",
+  "next_steps": [
+    "Put favicon.svg and the web icons into site/ and the app's web/",
+    "Use the horizontal lockup in the README header and the landing page",
+    "Run a trademark search before any public launch"
+  ]
+}
