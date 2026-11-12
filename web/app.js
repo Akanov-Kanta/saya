@@ -1,7 +1,7 @@
 // SAYA web app. The browser only draws: shadows, A*, Bayes and the MDP run in Python.
 import { Buildings3D } from './buildings3d.js';
 import { astanaDate, compass, sunPosition } from './sun.js';
-import { BARRIER_ICON, LABEL, renderEmpty, renderLoading, renderNeedsWeather, renderResult } from './panel.js';
+import { BARRIER_ICON, BARRIER_KIND, LABEL, esc, renderEmpty, renderLoading, renderNeedsWeather, renderResult } from './panel.js';
 
 const $ = (id) => document.getElementById(id);
 const PROFILES = [
@@ -98,26 +98,71 @@ function addLayers() {
   }
 }
 
+// A click on a barrier or a map fix opens a card about it; it never moves A or B.
+const info = new maplibregl.Popup({ closeOnClick: false, offset: 20, maxWidth: '300px', className: 'info-popup', focusAfterOpen: false });
+let infoKey = null;
+info.on('close', () => { infoKey = null; });
+const ON_MARKER = '.maplibregl-marker, .maplibregl-popup';
+
+function openInfo(key, lngLat, html) {
+  if (infoKey === key && info.isOpen()) { info.remove(); return; }
+  hideTooltip();
+  info.setLngLat(lngLat).setHTML(html);  // an open card moves to the new marker in place
+  if (!info.isOpen()) info.addTo(map);
+  infoKey = key;
+}
+
+function infoCard(icon, kind, title, rows, source, extra = '') {
+  const items = rows.map(([ms, text]) => `<li><span class="ms">${ms}</span><span>${text}</span></li>`).join('');
+  return `<div class="info ${kind}">
+    <div class="info-head"><span class="info-icon"><span class="ms">${icon}</span></span><div>${title}</div></div>
+    <ul class="info-rows">${items}</ul>${extra}<small class="info-src">${source}</small></div>`;
+}
+
+function barrierInfo(barrier, el) {
+  const kind = BARRIER_KIND[barrier.type] || 'Barrier';
+  const closedForAll = barrier.type === 'construction';
+  const rows = [
+    ['accessible', '<b>Person with disabilities:</b> impassable, SAYA routes around it'],
+    ['directions_walk', closedForAll ? '<b>Person without disabilities:</b> also closed' : '<b>Person without disabilities:</b> can pass'],
+  ];
+  const extra = el.classList.contains('avoided') ? '<p class="info-flag">The direct way passes here. The route on the map goes around it.</p>' : '';
+  const source = barrier.source === 'OpenStreetMap'
+    ? `From OpenStreetMap${barrier.note ? `: ${esc(barrier.note.replace(/^Mapped in OpenStreetMap as /, ''))}` : ''}`
+    : 'Simulated resident report for the demo, not a verified barrier';
+  return infoCard(BARRIER_ICON[barrier.type] || 'warning', 'barrier', `<small>Barrier · ${kind}</small><b>${esc(barrier.name)}</b>`, rows, source, extra);
+}
+
+function fixInfo(fix) {
+  const rows = [['info', esc(fix.note)], ['route', 'Routes for both profiles can now cross here']];
+  return infoCard('build', 'fix', `<small>Map fix</small><b>A ${fix.length_m} m link added to the walk network</b>`, rows, 'Added by hand in data/map_fixes.json');
+}
+
+function clickable(el, label, open) {
+  el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', label);
+  el.tabIndex = 0;
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+}
+
 function addBarriers() {
   for (const barrier of state.meta.barriers) {
     const el = document.createElement('div');
     el.className = 'barrier-marker';
     el.innerHTML = `<span class="dot"><span class="ms">${BARRIER_ICON[barrier.type] || 'warning'}</span></span>`;
-    el.setAttribute('aria-label', barrier.name);
-    const source = barrier.source === 'OpenStreetMap' ? 'Mapped in OpenStreetMap' : 'Simulated resident report';
-    el.addEventListener('mouseenter', () => showTooltip(el, `<b>${barrier.name}</b><span>${source} · impassable for a person with disabilities</span>`));
-    el.addEventListener('mouseleave', hideTooltip);
-    new maplibregl.Marker({ element: el }).setLngLat([barrier.lon, barrier.lat]).addTo(map);
+    const lngLat = [barrier.lon, barrier.lat];
+    new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+    clickable(el, `Barrier: ${barrier.name}`, () => openInfo(`barrier-${barrier.id}`, lngLat, barrierInfo(barrier, el)));
     barrierMarkers[barrier.id] = el;
   }
-  for (const fix of state.meta.map_fixes || []) {
+  for (const [i, fix] of (state.meta.map_fixes || []).entries()) {
     const el = document.createElement('div');
     el.className = 'fix-marker';
     el.innerHTML = '<span class="ms">build</span>';
-    el.setAttribute('aria-label', 'Map fix');
-    el.addEventListener('mouseenter', () => showTooltip(el, `<b>Map fix: ${fix.length_m} m link added</b><span>${fix.note}</span><small>data/map_fixes.json</small>`));
-    el.addEventListener('mouseleave', hideTooltip);
-    new maplibregl.Marker({ element: el }).setLngLat([fix.lon, fix.lat]).addTo(map);
+    const lngLat = [fix.lon, fix.lat];
+    new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+    clickable(el, `Map fix: ${fix.length_m} m link added`, () => openInfo(`fix-${i}`, lngLat, fixInfo(fix)));
   }
 }
 
@@ -598,6 +643,7 @@ function onMouseMove(e) {
   const now = performance.now();
   if (now - lastPick < 60 || !buildings3d) return;
   lastPick = now;
+  if (e.originalEvent.target.closest?.(ON_MARKER)) { hideTooltip(); map.getCanvas().style.cursor = ''; return; }
   const p = buildings3d.pick(e.point.x, e.point.y);
   if (p) {
     showTooltip(null, buildingTooltip(p), { x: e.originalEvent.clientX, y: e.originalEvent.clientY });
@@ -635,6 +681,8 @@ async function start() {
   map.on('mousemove', onMouseMove);
   map.on('mouseout', hideTooltip);
   map.on('click', (e) => {
+    if (e.originalEvent.target.closest?.(ON_MARKER)) return;  // a marker handles its own click
+    if (info.isOpen()) { info.remove(); return; }  // the first click elsewhere only closes the card
     const which = state.activeField || (!state.start ? 'start' : 'end');
     setPoint(which, e.lngLat.lat, e.lngLat.lng);
     document.activeElement?.blur?.();

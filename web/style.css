@@ -327,7 +327,7 @@ tr.chosen td { font-weight: 650; color: var(--text); background: #f6f9fe; }
 .pin-b span { background: var(--b); }
 /* MapLibre places a marker by setting `transform` on its root element on every frame the map moves.
    So the root must have no transform or transition of its own; the look and the animation sit on the inner dot. */
-.barrier-marker { width: 28px; height: 28px; cursor: help; }
+.barrier-marker { width: 28px; height: 28px; cursor: pointer; }
 .barrier-marker .dot {
   width: 100%; height: 100%; box-sizing: border-box; border-radius: 50%; display: grid; place-items: center;
   background: var(--barrier); color: #fff; border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -337,9 +337,28 @@ tr.chosen td { font-weight: 650; color: var(--text); background: #f6f9fe; }
 .barrier-marker.avoided .dot { background: #d93a26; transform: scale(1.25); box-shadow: 0 0 0 5px rgba(217, 58, 38, 0.25), 0 2px 6px rgba(0, 0, 0, 0.3); }
 .fix-marker {
   width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: #2f6f9f; color: #fff;
-  border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25); cursor: help;
+  border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25); cursor: pointer;
 }
 .fix-marker .ms { font-size: 14px; }
+.barrier-marker:focus-visible, .fix-marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
+
+/* the card a barrier or map fix opens */
+.info-popup .maplibregl-popup-content { padding: 14px 16px 12px; border-radius: 14px; box-shadow: var(--shadow); font: inherit; color: var(--text); }
+.info-popup .maplibregl-popup-close-button { width: 28px; height: 28px; top: 6px; right: 6px; border-radius: 8px; font-size: 18px; color: var(--muted); }
+.info-popup .maplibregl-popup-close-button:hover { background: var(--soft); color: var(--text); }
+.info { display: grid; gap: 10px; font-size: 13px; line-height: 1.4; }
+.info-head { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding-right: 22px; }
+.info-head small { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.info-head b { display: block; font-size: 14px; font-weight: 600; margin-top: 2px; }
+.info-icon { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--barrier); }
+.info.fix .info-icon { border-radius: 9px; background: #2f6f9f; }
+.info-icon .ms { font-size: 18px; }
+.info-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.info-rows li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; }
+.info-rows .ms { font-size: 18px; color: var(--muted); }
+.info-rows b { font-weight: 600; }
+.info-flag { margin: 0; padding: 8px 10px; border-radius: 10px; background: #fdece9; color: #a3271a; font-size: 12.5px; }
+.info-src { color: var(--faint); font-size: 11.5px; }
 
 .tooltip {
   position: fixed; z-index: 10; pointer-events: none; display: flex; flex-direction: column; gap: 2px; max-width: 280px;

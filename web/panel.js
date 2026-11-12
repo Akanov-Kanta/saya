@@ -9,11 +9,15 @@ export const BARRIER_ICON = {
   steps: 'stairs', high_kerb: 'vertical_align_top', broken_ramp: 'block', narrow: 'compress',
   steep: 'trending_up', construction: 'construction',
 };
+export const BARRIER_KIND = {
+  steps: 'Steps without a ramp', high_kerb: 'Kerb without a ramp', broken_ramp: 'Broken kerb ramp',
+  narrow: 'Pavement too narrow', steep: 'Steep ramp', construction: 'Construction site',
+};
 
 const pct = (x) => `${Math.round(x * 100)}%`;
 const km = (m) => (m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`);
 const min1 = (x) => `${x.toFixed(1)} min`;
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export function renderEmpty() {
   return `
@@ -76,7 +80,7 @@ function disabledResult(trip, names) {
     const items = direct.barriers.map((b) => `<li><span class="ms">${BARRIER_ICON[b.type] || 'warning'}</span>${esc(b.name)}</li>`).join('');
     avoid = `
       <div class="avoided">
-        <b>The direct way (${km(direct.stats.length_m)}) has ${direct.barriers.length === 1 ? 'a barrier' : `${direct.barriers.length} barriers`} a wheelchair cannot pass:</b>
+        <b>The direct way (${km(direct.stats.length_m)}) has ${direct.barriers.length === 1 ? 'a barrier' : `${direct.barriers.length} barriers`} a person with disabilities cannot pass:</b>
         <ul>${items}</ul>
         <small>Shown on the map as a grey dashed line. This route goes around ${direct.barriers.length === 1 ? 'it' : 'them'}.</small>
       </div>`;

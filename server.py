@@ -150,7 +150,8 @@ def meta():
         "profiles": {key: profile["label"] for key, profile in config.PROFILES.items()},
         "defaults": {"date": config.DEFAULT_DATE, "time": config.DEFAULT_TIME, "profile": "disabled",
                      "start": config.DEFAULT_START, "end": config.DEFAULT_END},
-        "barriers": [{**{k: r[k] for k in ("id", "type", "name", "lat", "lon")}, "source": r.get("source", "simulated")}
+        "barriers": [{**{k: r[k] for k in ("id", "type", "name", "lat", "lon")},
+                      "source": r.get("source", "simulated"), "note": r.get("note", "")}
                      for r in area.barriers],
         "map_fixes": [j for j in area.map_fixes if not j["note"].startswith("footpath ends")],
     }
