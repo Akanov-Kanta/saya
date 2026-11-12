@@ -1,3 +1,4 @@
-# Vercel uploads only the built page; everything else here is source for build.mjs
+# Vercel uploads only the built page and its media; everything else here is source for build.mjs
 /*
 !/index.html
+!/media
