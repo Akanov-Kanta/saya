@@ -16,11 +16,14 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 
+_memory = {}  # readings fetched by this process, for when the cache file cannot be written
+
+
 def _load_cache() -> dict:
     try:
-        return json.loads(CACHE_FILE.read_text())
+        return {**json.loads(CACHE_FILE.read_text()), **_memory}
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+        return dict(_memory)
 
 
 def feels_like_at(when: datetime, lat: float, lon: float) -> tuple[float, str]:
@@ -51,6 +54,10 @@ def feels_like_at(when: datetime, lat: float, lon: float) -> tuple[float, str]:
               f"air {hourly['temperature_2m'][index]:.1f} degC, feels like {feels_like:.1f} degC")
 
     cache[key] = {"feels_like": feels_like, "source": source}
-    CACHE_FILE.parent.mkdir(exist_ok=True)
-    CACHE_FILE.write_text(json.dumps(cache, indent=2))
+    _memory[key] = cache[key]
+    try:
+        CACHE_FILE.parent.mkdir(exist_ok=True)
+        CACHE_FILE.write_text(json.dumps(cache, indent=2))
+    except OSError:  # read-only disk, as on Vercel: keep the reading in memory only
+        pass
     return feels_like, source

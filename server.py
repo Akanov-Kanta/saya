@@ -8,6 +8,7 @@ Python through the same planner.plan_trip() the CLI uses.
 
 import json
 import math
+import os
 import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -104,7 +105,9 @@ def warm_up():
 
 @asynccontextmanager
 async def lifespan(app):
-    threading.Thread(target=warm_up, daemon=True).start()
+    # On Vercel every new instance would repeat this, so there shade is computed when it is asked for.
+    if not os.environ.get("VERCEL"):
+        threading.Thread(target=warm_up, daemon=True).start()
     yield
 
 

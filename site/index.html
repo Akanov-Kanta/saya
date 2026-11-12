@@ -206,7 +206,8 @@
         <p class="gloss"><b>сая</b>: Kazakh for shade, as in <b>саябақ</b>, a park</p>
         <p class="lead">A route planner for Astana's hot summers. For a person with disabilities it finds a way they can actually get through, works out how much of it is in the sun, and decides whether the shadier detour is worth it today. Anyone else picks the fastest route or the one with most shade.</p>
         <div class="actions">
-          <a class="btn primary" href="https://github.com/Akanov-Kanta/saya">View the code</a>
+          <a class="btn primary" href="https://saya-map.vercel.app">Open the live map</a>
+          <a class="btn" href="https://github.com/Akanov-Kanta/saya">View the code</a>
           <a class="btn" href="https://colab.research.google.com/github/Akanov-Kanta/saya/blob/main/SAYA_algorithms.ipynb">Open the notebook in Colab</a>
         </div>
       </div>
@@ -369,6 +370,10 @@
             <li><b>The decision first, then the reasons.</b> <span>One card says which route to take and why. "How SAYA decided" opens the A* table, the Bayes calculation and the MDP Q-table, the same numbers the console prints.</span></li>
           </ul>
           <p class="muted">The browser only draws. Shadows, A*, Bayes and the MDP all run in Python behind FastAPI; the map is MapLibre GL on free OpenFreeMap tiles, with three.js for the buildings. On a phone the planner becomes a bottom sheet.</p>
+          <div class="actions" style="margin-top:4px">
+            <a class="btn primary" href="https://saya-map.vercel.app">Open the live map</a>
+          </div>
+          <p class="muted">The first load can take about 10 seconds while the Python server starts.</p>
         </div>
       </div>
     </section>
@@ -413,7 +418,7 @@
     <section id="run">
       <div class="prose" style="margin-bottom:28px">
         <p class="eyebrow">Run it</p>
-        <h2>Two minutes on a laptop, offline</h2>
+        <h2>Or two minutes on a laptop, offline</h2>
         <p>Python 3.10 or newer. The map data and the weather readings are saved in the repo, so the demo runs without a network.</p>
       </div>
       <div class="cmds">

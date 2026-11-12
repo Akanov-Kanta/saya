@@ -2,6 +2,8 @@
 
 **A route planner for Astana's hot summers. A person with disabilities gets one barrier-free route to the door, with SAYA itself deciding whether a shadier detour is worth it today. A person without disabilities picks the fastest or the shadiest route, and SAYA suggests one.**
 
+**Live:** the 3D map at [saya-map.vercel.app](https://saya-map.vercel.app) (the first load can take about 10 seconds while the server starts) · the project page at [saya-pi.vercel.app](https://saya-pi.vercel.app)
+
 *Сая* is Kazakh for shade (as in *саябақ*, park). The project is an AI Fundamentals final project. It uses three course algorithms, and each one feeds the next:
 
 | # | Algorithm | Subproblem | Input → Output |
@@ -16,9 +18,13 @@ The map covers a 1.7 km circle of Astana's EXPO district: QAIRU (Qazaq AI Resear
 
 ## Interactive 3D map
 
+Online at [saya-map.vercel.app](https://saya-map.vercel.app), or on your own machine:
+
 ```bash
 python server.py        # then open http://127.0.0.1:8765
 ```
+
+The landing page in `site/` deploys to Vercel on every push to `main`. The map runs as its own Vercel project; `scripts/deploy_map.sh` deploys it.
 
 - **Two people, two ways of planning.**
   - **Person with disabilities:** SAYA picks the way. A\* keeps only barrier-free paths, and the MDP takes the shadier one only when the heat makes it worth the extra minutes. The map shows one route (teal), plus the direct way in grey dashes with the barriers it has, so you can see what the route goes around.
@@ -200,6 +206,9 @@ weather.py     Open-Meteo reading (cached)
 mdp.py         2-state / 2-action MDP, one Bellman update
 map_view.py    static Folium HTML map for the CLI
 tests/         pytest suite
+site/          the landing page (page.html + Hairline figures, built into index.html by build.mjs)
+vercel.json    serves site/ on Vercel for every push to main
+scripts/       deploy_map.sh: deploys the 3D map to its own Vercel project
 ```
 
 ## Data
