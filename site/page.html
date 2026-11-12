@@ -198,7 +198,7 @@
         <p class="eyebrow">AI Fundamentals · final project · Astana</p>
         <h1 style="margin-top:18px">SAYA</h1>
         <p class="gloss"><b>сая</b>: Kazakh for shade, as in <b>саябақ</b>, a park</p>
-        <p class="lead">A route planner for wheelchair users and elderly pedestrians in Astana's hot summers. It finds a path they can actually get through, works out how much of it is in the sun, and decides whether the shadier detour is worth it today.</p>
+        <p class="lead">A route planner for Astana's hot summers. For a person with disabilities it finds a way they can actually get through, works out how much of it is in the sun, and decides whether the shadier detour is worth it today. Anyone else picks the fastest route or the one with most shade.</p>
         <div class="actions">
           <a class="btn primary" href="https://github.com/Akanov-Kanta/saya">View the code</a>
           <a class="btn" href="https://colab.research.google.com/github/Akanov-Kanta/saya/blob/main/SAYA_algorithms.ipynb">Open the notebook in Colab</a>
@@ -224,7 +224,7 @@
         <div class="prose">
           <p class="eyebrow">The trip</p>
           <h2>The shortest way is not always the one to take</h2>
-          <p>A wheelchair user rolls from Astana IT University to Mega Silk Way on 15 July at 16:00. The feels-like temperature is 31&nbsp;°C. Two resident reports, a broken kerb ramp and steps without a ramp, close parts of the network (both simulated for the demo), so A* has to route around them.</p>
+          <p>A person with disabilities goes from QAIRU, the Qazaq AI Research University at Alem.ai, to the main entrance of Nazarbayev University on 15 July at 16:00. The feels-like temperature is 31&nbsp;°C. The direct way is 1455&nbsp;m, but its pavement on Nurlan Balgymbayev Street is blocked by parked cars (a simulated resident report), so A* has to go around.</p>
           <p class="muted">Sample run of <code>python main.py</code>, with the weather reading cached in the repo.</p>
         </div>
         <div>
@@ -232,12 +232,12 @@
             <table>
               <thead><tr><th>Route</th><th>Length</th><th>In sun</th><th>Minutes</th><th>Minutes in sun</th></tr></thead>
               <tbody>
-                <tr><td>Shortest</td><td class="big">1560 m</td><td class="big sun">100%</td><td class="big">28.9</td><td class="big sun">28.9</td></tr>
-                <tr class="win"><td>Shaded</td><td class="big">1630 m</td><td class="big shade">81%</td><td class="big">30.2</td><td class="big shade">24.5</td></tr>
+                <tr class="win"><td>Fastest</td><td class="big">1741 m</td><td class="big sun">91%</td><td class="big">32.2</td><td class="big sun">29.3</td></tr>
+                <tr><td>Most shade</td><td class="big">1765 m</td><td class="big shade">88%</td><td class="big">32.7</td><td class="big shade">28.7</td></tr>
               </tbody>
             </table>
           </div>
-          <p class="verdict">The shaded route costs 70&nbsp;m and 1.3&nbsp;minutes more and saves 236&nbsp;m of rolling in direct sun. Today that is worth it, so SAYA recommends it.</p>
+          <p class="verdict">Both routes avoid the blocked pavement. The shadier one costs 25&nbsp;m and half a minute more and saves only 0.6&nbsp;minutes in the sun, so SAYA takes the fastest barrier-free route. On the longer trip to the Botanical Garden the shade wins.</p>
         </div>
       </div>
     </section>
@@ -247,7 +247,7 @@
         <p class="eyebrow">How it decides</p>
         <h2>Three course algorithms, each feeding the next</h2>
         <p>A* produces two routes. Bayes turns a noisy forecast into the chance of dangerous heat. The MDP weighs both and picks one. The figures below run the same rules on small examples; drag across them, or press play.</p>
-        <p class="flow" aria-label="Pipeline"><b>OSM + shade</b> → <b>1 · A*</b> two routes → <b>2 · Bayes</b> P(dangerous heat) → <b>3 · MDP</b> shortest or shaded</p>
+        <p class="flow" aria-label="Pipeline"><b>OSM + shade</b> → <b>1 · A*</b> two routes → <b>2 · Bayes</b> P(dangerous heat) → <b>3 · MDP</b> fastest or most shade</p>
       </div>
 
       <article class="step" id="astar">
@@ -266,15 +266,15 @@
         </figure>
         <div class="copy">
           <p class="num">1 · Search</p>
-          <h3>A* finds two routes the walker can pass</h3>
-          <p>Every edge of the real OpenStreetMap walk network gets a cost. Steps and broken ramps are impassable for a wheelchair; busy roads, paving stones and crossings without a light cost extra. Sun on the edge costs extra too, scaled by the weight w.</p>
+          <h3>A* finds two routes the person can pass</h3>
+          <p>Every edge of the real OpenStreetMap walk network gets a cost. For a person with disabilities, steps, kerbs without a ramp, broken ramps and narrow or steep paths are impassable; roads without a sidewalk, paving stones and crossings without a traffic light cost extra. For a person without disabilities only a construction site blocks the way. Sun on the edge costs extra too, scaled by the weight w.</p>
           <pre>cost = length × access penalty
      × (1 + w × sun_fraction) + crossing penalty</pre>
-          <p>With w = 0 A* returns the shortest accessible route; with w = 3 a metre in the sun counts as four, and it returns the shaded one. The heuristic is the straight-line distance to the goal. No edge costs less than its own length, so the heuristic never overestimates and A* stays optimal.</p>
+          <p>With w = 0 A* returns the fastest route this person can pass; with w = 3 a metre in the sun counts as four, and it returns the one with most shade. The heuristic is the straight-line distance to the goal. No edge costs less than its own length, so the heuristic never overestimates and A* stays optimal.</p>
           <dl class="io">
-            <dt>input</dt><dd>5125 walk nodes, 15020 edges, shade measured on each</dd>
+            <dt>input</dt><dd>5125 walk nodes, 15084 edges, shade measured on each</dd>
             <dt>output</dt><dd>two paths with length, share in sun and minutes</dd>
-            <dt>cost</dt><dd>878 nodes expanded, against 1988 for Dijkstra</dd>
+            <dt>cost</dt><dd>1449 nodes expanded, against 2886 for Dijkstra</dd>
           </dl>
         </div>
       </article>
@@ -328,19 +328,19 @@
             <output for="r-fork">60</output>
             <button class="play" type="button" aria-pressed="false">play</button>
           </div>
-          <figcaption>Move from left to right to raise the chance of dangerous heat; the sunny lane's paving stones swell with it. Past the break-even point the switch swings into the lane under the arcade, and the chosen lane's kerb is lit. The penalty moves that point: 0.42 at 45, 0.25 at 60, 0.08 at 90.</figcaption>
+          <figcaption>Move from left to right to raise the chance of dangerous heat; the sunny lane's paving stones swell with it. Past the break-even point the switch swings into the lane under the arcade, and the chosen lane's kerb is lit. The minutes come from the trip to the Botanical Garden. The penalty moves the break-even point: 0.73 at 45, 0.27 at 60, and at 90 the shade wins even on a safe day.</figcaption>
         </figure>
         <div class="copy">
           <p class="num">3 · Decision</p>
           <h3>An MDP picks the route</h3>
-          <p>The walker is Comfortable or HeatStressed; the actions are the two A* routes. Each minute in direct sun is a small chance of heat stress: 3% when the heat is dangerous, 0.2% when it is safe, times the walker's vulnerability (1.5 for a wheelchair user), averaged over the Bayes belief. The reward is minus the walking minutes, and ending heat-stressed costs 60.</p>
+          <p>The person is Comfortable or HeatStressed; the actions are the two A* routes. Each minute in direct sun is a small chance of heat stress: 3% when the heat is dangerous, 0.2% when it is safe, times the person's vulnerability (1.5 for a person with disabilities), averaged over the Bayes belief. The reward is minus the walking minutes, and ending heat-stressed costs 60.</p>
           <pre>Q(s, a) = R(s, a) + γ · Σ P(s' | s, a) · V₀(s')
 γ = 0.9, V₀(Comfortable) = 0, V₀(HeatStressed) = −60</pre>
           <dl class="io">
-            <dt>Shortest</dt><dd><span class="mono">Q = −59.80</span></dd>
-            <dt>Shaded</dt><dd><span class="mono">Q = −58.54</span>, the higher, so take the shaded route</dd>
+            <dt>Fastest</dt><dd><span class="mono">Q = −63.37</span>, the higher, so take the fastest route</dd>
+            <dt>Most shade</dt><dd><span class="mono">Q = −63.52</span></dd>
           </dl>
-          <p class="muted">One Bellman update, then argmax over Q(Comfortable, a).</p>
+          <p class="muted">One Bellman update, then argmax over Q(Comfortable, a). For a person with disabilities the answer is the route they get, with no choice to make. A person without disabilities sees it as a suggestion and switches between fastest and most shade.</p>
         </div>
       </article>
     </section>
@@ -348,8 +348,8 @@
     <section id="app">
       <div class="app">
         <figure class="shot">
-          <img src="{{SHOT}}" width="800" height="600" alt="The SAYA web app: 3D buildings of the EXPO district with the Nur Alem sphere, a trip from Astana IT University to Mega Silk Way with the recommended shaded route in blue and the shortest route dashed in red, and the planner panel with the profile, the time of day and the decision">
-          <figcaption class="muted">The web app: Astana IT University to Mega Silk Way, past the Nur Alem sphere.</figcaption>
+          <img src="{{SHOT}}" width="800" height="600" alt="The SAYA web app: 3D buildings of the EXPO district with the Nur Alem sphere, a barrier-free route for a person with disabilities from QAIRU to the main entrance of Nazarbayev University, and the planner panel with the two profiles and the time of day">
+          <figcaption class="muted">The web app: a barrier-free route from QAIRU to the main entrance of Nazarbayev University.</figcaption>
         </figure>
         <div class="prose">
           <p class="eyebrow">The map</p>
@@ -357,8 +357,9 @@
           <ul class="features">
             <li><b>Buildings drawn from the shadow model.</b> <span>Every OSM building and building part stands at its real height, on columns where it has them, with its flat, dome or pyramid roof. Hover one to see its height and where that number comes from.</span></li>
             <li><b>Any time of day.</b> <span>Drag the timeline from 05:00 to 22:00 or press play. The shade on the ground turns and stretches, and the route is recomputed. After sunset the windows light up.</span></li>
-            <li><b>Your own trip.</b> <span>Search a place by name, tap a quick pick, or click the map, then drag either marker.</span></li>
-            <li><b>Who walks.</b> <span>Wheelchair user, elderly pedestrian or pedestrian without mobility needs. Barriers, speed and heat vulnerability change with the choice.</span></li>
+            <li><b>Your own trip, to the door.</b> <span>Search a place by name, tap a quick pick, or click the map, then drag either marker. A trip to a building ends at its entrance: the main one, or the one facing the other end of the trip.</span></li>
+            <li><b>Two profiles.</b> <span>A person with disabilities gets one barrier-free route and the list of barriers it goes around. A person without disabilities switches between the fastest route and the one with most shade, and SAYA marks the one it suggests.</span></li>
+            <li><b>Barriers and map fixes on the map.</b> <span>Steps, kerbs without a ramp, a broken ramp, a blocked pavement and a steep ramp, each with an icon. A wrench marks a crossing that OpenStreetMap draws in pieces and SAYA joins by hand.</span></li>
             <li><b>The decision first, then the reasons.</b> <span>One card says which route to take and why. "How SAYA decided" opens the A* table, the Bayes calculation and the MDP Q-table, the same numbers the console prints.</span></li>
           </ul>
           <p class="muted">The browser only draws. Shadows, A*, Bayes and the MDP all run in Python behind FastAPI; the map is MapLibre GL on free OpenFreeMap tiles, with three.js for the buildings. On a phone the planner becomes a bottom sheet.</p>
@@ -368,17 +369,18 @@
 
     <section id="answers">
       <div class="prose" style="margin-bottom:28px">
-        <p class="eyebrow">Same trip, different answers</p>
+        <p class="eyebrow">Different inputs, different answers</p>
         <h2>The decision moves with the inputs</h2>
       </div>
           <div class="scroll">
             <table class="runs">
               <thead><tr><th>Run</th><th>Reading</th><th>P(danger)</th><th>Decision</th></tr></thead>
               <tbody>
-                <tr><td><code>python main.py</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Shaded</b></td></tr>
-                <tr><td><code>--date 2026-08-20</code></td><td>17.6 °C cool</td><td>3%</td><td><b>Shortest</b></td></tr>
-                <tr><td><code>--profile standard</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Shaded</b>, only just (Q −32.3 vs −32.7): a faster, less vulnerable walker gains little</td></tr>
-                <tr><td><code>--profile elderly --time 18:00</code></td><td>27.5 °C warm</td><td>23%</td><td><b>Shortest</b>: shade saves 6 sun-minutes but costs 5</td></tr>
+                <tr><td><code>python main.py</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Fastest</b> barrier-free route to NU: the shadier way saves only 0.6 sun-minutes</td></tr>
+                <tr><td><code>--end botanical</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Most shade</b>: a long walk, 4 sun-minutes saved for 0.7 extra minutes</td></tr>
+                <tr><td><code>--end botanical --date 2026-08-20</code></td><td>17.6 °C cool</td><td>3%</td><td><b>Fastest</b>: shade is not worth the extra minutes when it is cool</td></tr>
+                <tr><td><code>--start nu --end botanical</code></td><td>31.0 °C hot</td><td>75%</td><td><b>Most shade</b>, going around 3 barriers that are on the direct way</td></tr>
+                <tr><td><code>--profile standard --time 18:00</code></td><td>27.5 °C warm</td><td>23%</td><td>SAYA <b>suggests Fastest</b>; in the app this person chooses</td></tr>
               </tbody>
             </table>
           </div>
@@ -395,7 +397,8 @@
             <li>Building heights come from the OSM <code>height</code> tag (14 pieces) or from levels × 3.2&nbsp;m (469). The other 551 use a default: 9&nbsp;m, or less for small types such as garages and sheds.</li>
             <li>Building parts follow OSM's Simple 3D Buildings scheme, each with its own base height and roof. The Nur Alem sphere is set to a sphere by hand in <code>data/landmarks.json</code>.</li>
             <li>Trees come from OSM: 34 single trees, 66 tree rows and 25 woods. Parks probably have more trees than are mapped, so real shade is likely higher than computed.</li>
-            <li>The barrier reports in <code>data/barriers.json</code> are simulated for the demo. OSM has no kerb, step or incline data for this area.</li>
+            <li>Five of the seven barrier reports in <code>data/barriers.json</code> are simulated for the demo. The two raised kerbs come from OSM (<code>kerb=raised</code>), and steps drawn in OSM count as well.</li>
+            <li>Map fixes and the Nazarbayev University main entrance in <code>data/map_fixes.json</code> are set by hand from the OSM geometry, each with a note. The crossing in front of NU is assumed to have a traffic light. Without the fixes, the direct way from QAIRU to NU went 3.8&nbsp;km around the campus; with them it is 1.5&nbsp;km.</li>
             <li>The monthly priors, the likelihood table, the heat-stress rates, the vulnerability multipliers and the −60 penalty are illustrative values. Shadows come from buildings and trees only; terrain, awnings and bus shelters are ignored.</li>
           </ul>
       </div>
@@ -412,7 +415,7 @@
         <div class="cmd"><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate &amp;&amp; pip install -r requirements.txt</code><button type="button">copy</button></div>
         <div class="cmd"><code>python server.py <span class="hint"># 3D map at http://127.0.0.1:8765</span></code><button type="button">copy</button></div>
         <div class="cmd"><code>python main.py <span class="hint"># console version, every step printed</span></code><button type="button">copy</button></div>
-        <div class="cmd"><code>python -m pytest <span class="hint"># 26 tests</span></code><button type="button">copy</button></div>
+        <div class="cmd"><code>python -m pytest <span class="hint"># 30 tests</span></code><button type="button">copy</button></div>
       </div>
     </section>
   </main>

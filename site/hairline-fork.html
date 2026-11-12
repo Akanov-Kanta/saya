@@ -893,8 +893,9 @@ const {
   spring, stepS, tdone, tset, tval, tween, disposer, mk, pointer, put, register, solid,
 } = HL;
 
-// SAYA's sample run: a wheelchair user (v 1.5), AITU to Mega Silk Way. Walk and sun minutes per route.
-const SHORT = { walk: 28.9, sun: 28.9 }, SHADE = { walk: 30.2, sun: 24.5 };
+// SAYA's run to the Botanical Garden: a person with disabilities (v 1.5), QAIRU to the Botanical Garden,
+// 15 July 16:00. Walk and sun minutes per route: the fastest one and the one with most shade.
+const SHORT = { walk: 55.7, sun: 50.4 }, SHADE = { walk: 56.4, sun: 46.4 };
 const V = 1.5, GAMMA = 0.9, HD = Math.min(0.99, 0.03 * V), HS = Math.min(0.99, 0.002 * V);
 /** P(heat stress) on a route with `sun` minutes in the sun, when dangerous heat has probability p. */
 const stress = (p, sun) => p * (1 - (1 - HD) ** sun) + (1 - p) * (1 - (1 - HS) ** sun);
@@ -1027,7 +1028,7 @@ function mount({ stage, svg, read }, value) {
     bl.sil.classList.toggle("hi", p === null);
     lanes.shade.classList.toggle("hi", p !== null && shade);
     lanes.sun.classList.toggle("hi", p !== null && !shade);
-    read.textContent = p === null ? "rest" : `p ${p.toFixed(2)} · ${shade ? "shaded" : "shortest"}`;
+    read.textContent = p === null ? "rest" : `p ${p.toFixed(2)} · ${shade ? "most shade" : "fastest"}`;
     B.wake();
   }
 
@@ -1046,7 +1047,7 @@ function mount({ stage, svg, read }, value) {
 
 hairline({
   name: "fork",
-  means: "One Bellman update at the fork: as dangerous heat gets likelier, the switch sends the wheelchair user into the shade.",
+  means: "One Bellman update at the fork: as dangerous heat gets likelier, the switch sends the person with disabilities into the shade.",
   rules: [1, 4, 5, 8],
   range: [45, 60, 90],
   tour: [[72, 196], [296, 150], [98, 176], null],
