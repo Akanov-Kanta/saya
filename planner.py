@@ -50,6 +50,14 @@ class Area:
         self.buildings_m = buildings.to_crs(config.PROJECTED_CRS)
         self.trees_m = trees.to_crs(config.PROJECTED_CRS)
         self.edges = ox.graph_to_gdfs(self.graph, nodes=False, fill_edge_geometry=True)
+        # Measure every edge in the same projection as the A* heuristic. osmnx's lengths are
+        # great-circle distances on a sphere, up to 0.3 % shorter than UTM metres at Astana's
+        # latitude, and then a straight line in UTM could overestimate the remaining cost.
+        # A polyline is never shorter than the straight line between its ends, so with these
+        # lengths the heuristic is admissible exactly.
+        self.edges["length"] = self.edges.geometry.length
+        for (u, v, key), length in zip(self.edges.index, self.edges["length"]):
+            self.graph.edges[u, v, key]["length"] = float(length)
         self.edge_keys = list(self.edges.index)
         self.lengths = self.edges["length"].to_numpy()
         self.node_ids = list(self.graph.nodes)

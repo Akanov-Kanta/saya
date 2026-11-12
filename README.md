@@ -26,6 +26,12 @@ python server.py        # then open http://127.0.0.1:8765
 
 The browser only draws. The shadows, A\*, Bayes and the MDP all run in Python (FastAPI). The map uses MapLibre GL with free OpenFreeMap tiles, so no API key is needed.
 
+## Algorithms notebook
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Akanov-Kanta/saya/blob/main/SAYA_algorithms.ipynb)
+
+[`SAYA_algorithms.ipynb`](SAYA_algorithms.ipynb) writes out A\*, the Bayes update and the MDP cell by cell, with the formulas. It runs A\* by hand on a four-node toy map (with the expansion order), checks the admissibility of the heuristic on every edge of the real map, prints the Bayes and Bellman calculations, and plots where the MDP decision flips. The last cell checks that the notebook gives exactly the same numbers as the project code. In Colab, *Runtime → Run all* downloads the repo and takes about a minute.
+
 ## How it works
 
 ```mermaid
@@ -47,7 +53,7 @@ flowchart LR
 cost = length × access penalty × (1 + w × sun_fraction) + crossing penalty
 ```
 
-The access penalty depends on the mobility profile. Steps and a broken ramp are impassable for a wheelchair. Busy roads without a sidewalk, paving stones and crossings without a traffic light all cost extra. `w = 0` gives the shortest accessible route. `w = 3` gives the shaded one, where one metre in the sun counts as four. "Shortest" means the cheapest route once the accessibility penalties are counted, so at some hours the shaded route can be a few metres shorter. The heuristic is the straight-line distance to the goal. It never overestimates because no edge costs less than its own length, so A\* stays optimal. The program also runs Dijkstra (A\* with h = 0) on the same graph, only to show how many fewer nodes A\* expands (877 vs 1367).
+The access penalty depends on the mobility profile. Steps and a broken ramp are impassable for a wheelchair. Busy roads without a sidewalk, paving stones and crossings without a traffic light all cost extra. `w = 0` gives the shortest accessible route. `w = 3` gives the shaded one, where one metre in the sun counts as four. "Shortest" means the cheapest route once the accessibility penalties are counted, so at some hours the shaded route can be a few metres shorter. The heuristic is the straight-line distance to the goal. It never overestimates because no edge costs less than its own length, and every length is measured in the same UTM projection as the heuristic (a path is never shorter than the straight line between its ends). So A\* stays optimal. The program also runs Dijkstra (A\* with h = 0) on the same graph, only to show how many fewer nodes A\* expands (878 vs 1367).
 
 **2. Bayesian inference** (`bayes.py`). The hidden state is Dangerous or Safe heat. The sensor is the forecast "feels like" temperature, put in a bucket: cool (< 24 °C), warm (24 to 30 °C) or hot (≥ 30 °C). The forecast is noisy, so each bucket has a likelihood under each state:
 
@@ -78,9 +84,9 @@ Barrier report #2: Steps without a ramp on the path by EXPO C1 [steps] -> 6 edge
 
 1. A* search: two accessible routes
 route       w   length  in sun  minutes  sun min  A* expanded  Dijkstra
-Shortest    0   1557 m    100%     28.8     28.8          877      1367
-Shaded      3   1654 m     81%     30.6     24.7         1269      1380
-Output: the shaded route is +98 m and +1.8 min, with 220 m less walking in the sun.
+Shortest    0   1560 m    100%     28.9     28.8          878      1367
+Shaded      3   1657 m     81%     30.7     24.7         1269      1381
+Output: the shaded route is +97 m and +1.8 min, with 221 m less walking in the sun.
 
 2. Bayesian inference: is it dangerously hot?
 Input: prior P(Dangerous) for month 7 = 0.30
@@ -90,14 +96,14 @@ P(Dangerous | hot) = 0.210 / 0.280 = 0.750
 
 3. MDP: Shortest or Shaded?
 s, a                         P(->Comf.) P(->Stress)       R   Q(s,a)
-Comfortable, Shortest             0.429       0.571   -28.8   -59.67
-Comfortable, Shaded               0.473       0.527   -30.6   -59.10
-HeatStressed, Shortest            0.001       0.999   -28.8   -82.76
-HeatStressed, Shaded              0.097       0.903   -30.6   -79.38
-Output: start Comfortable -> choose SHADED (Q = -59.10 vs -59.67).
+Comfortable, Shortest             0.428       0.572   -28.9   -59.76
+Comfortable, Shaded               0.472       0.528   -30.7   -59.19
+HeatStressed, Shortest            0.001       0.999   -28.9   -82.82
+HeatStressed, Shaded              0.097       0.903   -30.7   -79.44
+Output: start Comfortable -> choose SHADED (Q = -59.19 vs -59.76).
 
 Recommendation
-Take the shaded route: 1654 m, about 31 min, 81% in the sun, 53% chance of heat stress.
+Take the shaded route: 1657 m, about 31 min, 81% in the sun, 53% chance of heat stress.
 Map saved to output/route_map.html
 ```
 
@@ -157,6 +163,7 @@ Every number lives in [`config.py`](config.py) and is a labelled assumption, not
 ## Project structure
 
 ```
+SAYA_algorithms.ipynb  Colab notebook: the three algorithms written out step by step
 main.py        CLI: runs the pipeline and prints every step
 server.py      web app (FastAPI): shade for any time, routes for any two points
 web/           3D map page (MapLibre GL): time slider, click to pick start and end
